@@ -52,7 +52,7 @@ class Model(nn.Module):
     def __init__(self):
         nn.Module.__init__(self)
         from PytorchRouting.CoreLayers import InitializationLayer, RoutingLossLayer, SelectionLayer
-        from PytorchRouting.DecisionLayers import REINFORCE, QLearning, SARSA
+        from PytorchRouting.DecisionLayers import REINFORCE, QLearning, SARSA, ActorCritic, GumbelSoftmax
         from PytorchRouting.RewardFunctions.Final import NegLossReward
         from PytorchRouting.RewardFunctions.PerAction import CollaborationReward
 
@@ -67,7 +67,9 @@ class Model(nn.Module):
         first_layer_width = 3
         out_dim = 10
         # self._dec_layer_1 = QLearning(
-        self._dec_layer_1 = REINFORCE(
+        # self._dec_layer_1 = REINFORCE(
+        # self._dec_layer_1 = ActorCritic(
+        self._dec_layer_1 = GumbelSoftmax(
         # self._dec_layer_1 = SARSA(
             first_layer_width,
             routing_input_dim,

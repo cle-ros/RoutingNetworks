@@ -32,4 +32,4 @@ class QLearning(DecisionLayer):
         _, greedy = policy.max(dim=1)
         explore = torch.randint(low=0, high=policy.size()[1], size=(1, batch_dim)).cuda().long()
         actions = torch.where(explore_bin.byte(), explore, greedy.unsqueeze(-1))
-        return actions, [policy] * len(actions)
+        return xs, actions, [policy] * len(actions)

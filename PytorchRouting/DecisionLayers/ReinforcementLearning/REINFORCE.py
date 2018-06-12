@@ -25,4 +25,4 @@ class REINFORCE(DecisionLayer):
         if torch.isnan(distribution.probs).any():
             print('not a num.  ', distribution.probs)
         actions = distribution.sample()
-        return actions, distribution
+        return xs, actions, distribution.logits

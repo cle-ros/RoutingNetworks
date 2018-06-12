@@ -80,24 +80,26 @@ class DecisionLayer(nn.Module, metaclass=abc.ABCMeta):
         :return:
         """
         if self._num_agents > 1:
-            actions, dists = [], []
+            actions, dists, ys = [], [], []
             for x, mx in zip(xs.split(1, dim=0), mxs):
-                action, generating_dist = self._forward(x, [mx], mx.next_action)
+                y, action, generating_dist = self._forward(x, [mx], mx.next_action)
                 actions.append(action)
                 dists.append(generating_dist)
+                ys.append(y)
             actions = torch.cat(actions, dim=0)
             dists = torch.cat(dists, dim=0)
+            ys = torch.cat(ys, dim=0)
         else:
-            actions, dists = self._forward(xs, mxs, 0)
+            ys, actions, dists = self._forward(xs, mxs, 0)
         for a, d, mx in zip(actions, dists.split(1, dim=0), mxs):
             mx.next_action = a
             mx.append('actions', a)
             mx.append('states', d)
             mx.append('loss_funcs', self._loss)
             mx.append('reward_func', self.additional_reward_func)
-            if isinstance(d, Distribution):
-                self.additional_reward_func.register(d.probs.data, actions)
-            else:
-                self.additional_reward_func.register(d.data, actions)
-        return xs, mxs
+            # if len(d.size()) > 2 and d.size()[1] == 2:
+            #     self.additional_reward_func.register(d[:, 0], actions)
+            # else:
+            self.additional_reward_func.register(d, actions)
+        return ys, mxs
 
