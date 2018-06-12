@@ -11,8 +11,8 @@ class Meta(object):
     Class Meta should be used to attach metainformation to samples
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, task=None):
+        self.task = task
 
     def append(self, attr_name, obj):
         try:

@@ -42,7 +42,7 @@ class DecisionLayer(nn.Module, metaclass=abc.ABCMeta):
         self.additional_reward_func = additional_reward_class(*additional_reward_args)
 
     @abc.abstractmethod
-    def _forward(self, xs, mxs, agent): return torch.FloatTensor(1, 1), []
+    def _forward(self, xs, mxs, prior_action): return torch.FloatTensor(1, 1), [], torch.FloatTensor(1, 1)
 
     @staticmethod
     @abc.abstractmethod
@@ -71,7 +71,7 @@ class DecisionLayer(nn.Module, metaclass=abc.ABCMeta):
                 for _ in range(self._num_agents)]
             )
 
-    def forward(self, xs, mxs):
+    def forward(self, xs, mxs, prior_actions=None):
         """
         The forward method of DecisionModule takes a batch of inputs, and a list of metainformation, and
         append the decision made to the metainformation objects.
@@ -80,9 +80,13 @@ class DecisionLayer(nn.Module, metaclass=abc.ABCMeta):
         :return:
         """
         if self._num_agents > 1:
+            if prior_actions is None:
+                raise ValueError('If multiple agents are available, argument '
+                                 '`prior_actions` must be provided as a long Tensor of size '
+                                 '(batch_size).')
             actions, dists, ys = [], [], []
-            for x, mx in zip(xs.split(1, dim=0), mxs):
-                y, action, generating_dist = self._forward(x, [mx], mx.next_action)
+            for x, mx, pa in zip(xs.split(1, dim=0), mxs, prior_actions):
+                y, action, generating_dist = self._forward(x, [mx], pa)
                 actions.append(action)
                 dists.append(generating_dist)
                 ys.append(y)
@@ -100,6 +104,6 @@ class DecisionLayer(nn.Module, metaclass=abc.ABCMeta):
             # if len(d.size()) > 2 and d.size()[1] == 2:
             #     self.additional_reward_func.register(d[:, 0], actions)
             # else:
-            self.additional_reward_func.register(d, actions)
-        return ys, mxs
+            self.additional_reward_func.register(d, a)
+        return ys, mxs, actions
 

@@ -17,6 +17,9 @@ class InitializationLayer(nn.Module):
     def __init__(self):
         nn.Module.__init__(self)
 
-    def forward(self, xs):
-        mxs = [Meta() for _ in xs]
-        return xs, mxs
+    def forward(self, xs, tasks=()):
+        if tasks:
+            mxs = [Meta(task=t) for t in tasks]
+        else:
+            mxs = [Meta() for _ in xs]
+        return xs, mxs, None

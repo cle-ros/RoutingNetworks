@@ -52,7 +52,7 @@ class Model(nn.Module):
     def __init__(self):
         nn.Module.__init__(self)
         from PytorchRouting.CoreLayers import InitializationLayer, RoutingLossLayer, SelectionLayer
-        from PytorchRouting.DecisionLayers import REINFORCE, QLearning, SARSA, ActorCritic, GumbelSoftmax
+        from PytorchRouting.DecisionLayers import REINFORCE, QLearning, SARSA, ActorCritic, GumbelSoftmax, PerTaskAssignment
         from PytorchRouting.RewardFunctions.Final import NegLossReward
         from PytorchRouting.RewardFunctions.PerAction import CollaborationReward
 
@@ -66,6 +66,7 @@ class Model(nn.Module):
         routing_input_dim = 288
         first_layer_width = 3
         out_dim = 10
+        self._task_layer = PerTaskAssignment()
         # self._dec_layer_1 = QLearning(
         # self._dec_layer_1 = REINFORCE(
         # self._dec_layer_1 = ActorCritic(
@@ -99,12 +100,13 @@ class Model(nn.Module):
         # y = self.rcnb_4(y)
         y = self.batch_norm(y)
         y = y.view(y.size()[0], -1)
-        y, meta = self._init_routing_layer(y)
-        y, meta = self._dec_layer_1(y, meta)
-        y, meta = self._sel_layer_1(y, meta)
-        y, meta = self._sel_layer_2(y, meta)
-        y, meta = self._sel_layer_3(y, meta)
-        return y, meta
+        routing_sample = self._init_routing_layer(y, tasks=[0 for _ in y])
+        routing_sample = self._task_layer(*routing_sample)
+        routing_sample = self._dec_layer_1(*routing_sample)
+        routing_sample = self._sel_layer_1(*routing_sample)
+        routing_sample = self._sel_layer_2(*routing_sample)
+        routing_sample = self._sel_layer_3(*routing_sample)
+        return routing_sample
 
     def loss(self, yhat, ytrue, ym):
         return self._loss_layer(yhat, ytrue, ym)
@@ -120,7 +122,7 @@ if __name__ == '__main__':
         batch_loss = 0.
         log_losses = np.zeros((2,))
         for i, (sample, label) in enumerate(zip(data[0][0], data[0][1])):
-            out, meta = model(Variable(torch.FloatTensor(sample).cuda()))
+            out, meta, _ = model(Variable(torch.FloatTensor(sample).cuda()))
             label = torch.LongTensor([label]).cuda()
             loss, rloss = model.loss(out, label, meta)
             log_losses += np.array([loss.tolist()[0], rloss.tolist()[0]])

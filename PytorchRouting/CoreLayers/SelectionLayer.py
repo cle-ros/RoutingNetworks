@@ -30,7 +30,7 @@ class SelectionLayer(nn.Module):
         x, xm = arg
         return self._submodules[xm.next_selection](x)
 
-    def forward(self, xs, mxs):
+    def forward(self, xs, mxs, actions):
         """
         This method takes a list of samples - a batch - and calls _forward_sample on each. Samples are
         a tensor where the first dimension is the batch dimension.
@@ -43,9 +43,9 @@ class SelectionLayer(nn.Module):
         assert len(xs) == len(mxs)
         # pool = Pool(self._threads)
         # ys = pool.map(self._apply_parallel, zip(xs, mxs))
-        for x, xm in zip(xs, mxs):
-            y = self._submodules[xm.next_action](x)
+        for x, na in zip(xs, actions):
+            y = self._submodules[na](x)
             ys.append(y)
         ys = torch.cat(ys, 0)
-        return ys, mxs
+        return ys, mxs, actions
 
