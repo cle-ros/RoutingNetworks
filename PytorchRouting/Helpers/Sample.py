@@ -8,7 +8,8 @@ This file defines class Sample.
 
 class Sample(object):
     """
-    Class Sample defines ...
+    Sample defines a simple struct-like class that is used to combine RL-relevant training information.
+    (i.e. state, action, reward, next state, next action)
     """
 
     def __init__(

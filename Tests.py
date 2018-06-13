@@ -10,13 +10,20 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
+from PytorchRouting.UtilLayers import Sequential
+
+from PytorchRouting.CoreLayers import InitializationLayer, RoutingLossLayer, SelectionLayer
+from PytorchRouting.DecisionLayers import REINFORCE, QLearning, SARSA, ActorCritic, GumbelSoftmax, PerTaskAssignment, \
+    WPL
+from PytorchRouting.RewardFunctions.Final import NegLossReward
+from PytorchRouting.RewardFunctions.PerAction import CollaborationReward
+
 
 class MNIST(object):
     def _process_list_of_samples(self, samples):
         processed = []
         for s in samples:
             s = np.array(s).reshape((1, 28, 28))
-            # s = np.repeat(s, 3, axis=0)
             processed.append(s[None])
         return processed
 
@@ -51,62 +58,33 @@ class RaviConvNetBlock(nn.Module):
 class Model(nn.Module):
     def __init__(self):
         nn.Module.__init__(self)
-        from PytorchRouting.CoreLayers import InitializationLayer, RoutingLossLayer, SelectionLayer
-        from PytorchRouting.DecisionLayers import REINFORCE, QLearning, SARSA, ActorCritic, GumbelSoftmax, PerTaskAssignment
-        from PytorchRouting.RewardFunctions.Final import NegLossReward
-        from PytorchRouting.RewardFunctions.PerAction import CollaborationReward
+        self.convolutions = nn.Sequential(
+            RaviConvNetBlock(1, 32, 3),
+            RaviConvNetBlock(32, 32, 3),
+            RaviConvNetBlock(32, 32, 3),
+            nn.BatchNorm2d(32),
+        )
 
-        self.rcnb_1 = RaviConvNetBlock(1, 32, 3)
-        self.rcnb_2 = RaviConvNetBlock(32, 32, 3)
-        self.rcnb_3 = RaviConvNetBlock(32, 32, 3)
-        self.rcnb_4 = RaviConvNetBlock(32, 32, 3)
-        self.batch_norm = nn.BatchNorm2d(32)
-
-        self._init_routing_layer = InitializationLayer()
         routing_input_dim = 288
         first_layer_width = 3
         out_dim = 10
-        self._task_layer = PerTaskAssignment()
-        # self._dec_layer_1 = QLearning(
-        # self._dec_layer_1 = REINFORCE(
-        # self._dec_layer_1 = ActorCritic(
-        self._dec_layer_1 = GumbelSoftmax(
-        # self._dec_layer_1 = SARSA(
-            first_layer_width,
-            routing_input_dim,
-            num_agents=1,
-            exploration=0.1,
-            policy_storage_type='approx',
-            detach=False,
-            approx_hidden_dims=(128, 128),
-        )
-        self._sel_layer_1 = SelectionLayer(
-            [(nn.Linear, (routing_input_dim, 128)) for _ in range(first_layer_width)]
-        )
-        self._sel_layer_2 = SelectionLayer(
-            [(nn.Linear, (128, 128)) for _ in range(first_layer_width)]
-        )
-        self._sel_layer_3 = SelectionLayer(
-            [(nn.Linear, (128, out_dim)) for _ in range(first_layer_width)]
-        )
-        self._loss_layer = RoutingLossLayer(
-            torch.nn.CrossEntropyLoss, NegLossReward, {}, {}, 1.
+
+        self.routing_layers = Sequential(
+            PerTaskAssignment(),
+            ActorCritic(first_layer_width, routing_input_dim, num_agents=1, exploration=0.1,
+                policy_storage_type='approx', detach=False, approx_hidden_dims=(128, 128),),
+            SelectionLayer([(nn.Linear, (routing_input_dim, 128)) for _ in range(first_layer_width)]),
+            SelectionLayer([(nn.Linear, (128, 128)) for _ in range(first_layer_width)]),
+            SelectionLayer([(nn.Linear, (128, out_dim)) for _ in range(first_layer_width)]),
         )
 
+        self._loss_layer = RoutingLossLayer(torch.nn.CrossEntropyLoss, NegLossReward, {}, {}, 1.)
+
     def forward(self, x):
-        y = self.rcnb_1(x)
-        y = self.rcnb_2(y)
-        y = self.rcnb_3(y)
-        # y = self.rcnb_4(y)
-        y = self.batch_norm(y)
+        y = self.convolutions(x)
         y = y.view(y.size()[0], -1)
-        routing_sample = self._init_routing_layer(y, tasks=[0 for _ in y])
-        routing_sample = self._task_layer(*routing_sample)
-        routing_sample = self._dec_layer_1(*routing_sample)
-        routing_sample = self._sel_layer_1(*routing_sample)
-        routing_sample = self._sel_layer_2(*routing_sample)
-        routing_sample = self._sel_layer_3(*routing_sample)
-        return routing_sample
+        y, meta = self.routing_layers(y, tasks=[0 for _ in y])
+        return y, meta
 
     def loss(self, yhat, ytrue, ym):
         return self._loss_layer(yhat, ytrue, ym)
@@ -118,11 +96,12 @@ if __name__ == '__main__':
     model.cuda()
     batch_size = 64
     opt = torch.optim.SGD(model.parameters(), lr=1e-3)
+    print('Loaded dataset and constructed model. Starting Training ...')
     for epoch in range(20):
         batch_loss = 0.
         log_losses = np.zeros((2,))
         for i, (sample, label) in enumerate(zip(data[0][0], data[0][1])):
-            out, meta, _ = model(Variable(torch.FloatTensor(sample).cuda()))
+            out, meta = model(Variable(torch.FloatTensor(sample).cuda()))
             label = torch.LongTensor([label]).cuda()
             loss, rloss = model.loss(out, label, meta)
             log_losses += np.array([loss.tolist()[0], rloss.tolist()[0]])
@@ -132,5 +111,7 @@ if __name__ == '__main__':
                 opt.step()
                 batch_loss = 0.
                 model.zero_grad()
+        log_losses /= float(i)
+        log_losses = np.round(log_losses, 3)
         print('Epoch {} finished. Model loss: {}, Routing loss: {}'.format(epoch + 1, *log_losses))
         losses, rlosses = 0., 0.

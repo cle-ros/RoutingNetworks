@@ -20,9 +20,5 @@ class REINFORCE(DecisionLayer):
     def _forward(self, xs, mxs, agent):
         policy = self._policy[agent](xs)
         distribution = torch.distributions.Categorical(logits=policy)
-        if (distribution.probs < 0.).any():
-            print('less than 0.', distribution.probs)
-        if torch.isnan(distribution.probs).any():
-            print('not a num.  ', distribution.probs)
         actions = distribution.sample()
         return xs, actions, distribution.logits

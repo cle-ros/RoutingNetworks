@@ -41,7 +41,7 @@ class TabularPolicyStorage(nn.Module, metaclass=abc.ABCMeta):
     def __init__(self, approx=None, in_features=None, num_selections=None, hidden_dims=()):
         nn.Module.__init__(self)
         self._approx = nn.Parameter(
-            torch.zeros(1, num_selections).float()
+            torch.ones(1, num_selections).float()/num_selections
         )
 
     def forward(self, xs):

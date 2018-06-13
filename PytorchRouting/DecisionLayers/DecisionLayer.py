@@ -83,7 +83,8 @@ class DecisionLayer(nn.Module, metaclass=abc.ABCMeta):
             if prior_actions is None:
                 raise ValueError('If multiple agents are available, argument '
                                  '`prior_actions` must be provided as a long Tensor of size '
-                                 '(batch_size).')
+                                 '(batch_size),\nwhere each entry determines the agent for '
+                                 'that sample.')
             actions, dists, ys = [], [], []
             for x, mx, pa in zip(xs.split(1, dim=0), mxs, prior_actions):
                 y, action, generating_dist = self._forward(x, [mx], pa)
@@ -96,7 +97,6 @@ class DecisionLayer(nn.Module, metaclass=abc.ABCMeta):
         else:
             ys, actions, dists = self._forward(xs, mxs, 0)
         for a, d, mx in zip(actions, dists.split(1, dim=0), mxs):
-            mx.next_action = a
             mx.append('actions', a)
             mx.append('states', d)
             mx.append('loss_funcs', self._loss)
