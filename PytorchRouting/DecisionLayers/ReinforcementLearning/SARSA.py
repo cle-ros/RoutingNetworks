@@ -11,7 +11,7 @@ from .QLearning import QLearning
 
 class SARSA(QLearning):
     """
-    Class REINFORCE defines ...
+    SARSA on-policy q-function learning.
     """
     @staticmethod
     def _loss(sample):

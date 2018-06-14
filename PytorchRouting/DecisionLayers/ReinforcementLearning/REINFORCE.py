@@ -11,7 +11,7 @@ from ..Decision import Decision
 
 class REINFORCE(Decision):
     """
-    Class REINFORCE defines ...
+    REINFORCE (likelihood ratio policy gradient) based decision making.
     """
     @staticmethod
     def _loss(sample):

@@ -12,7 +12,7 @@ from ..Decision import Decision
 
 class QLearning(Decision):
     """
-    Class REINFORCE defines ...
+    QLearning (state-action value function) based decision making.
     """
     @staticmethod
     def _loss(sample):

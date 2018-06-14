@@ -13,7 +13,7 @@ from torch.autograd import Variable
 
 class BaseReward(nn.Module, metaclass=abc.ABCMeta):
     """
-    Class BaseReward defines ...
+    Class BaseReward defines the base function for all final reward functions.
     """
 
     def __init__(self, scale=1.):

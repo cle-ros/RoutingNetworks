@@ -1,14 +1,14 @@
 """
-This file defines class Meta.
+This file defines class SampleMetaInformation.
 
 @author: Clemens Rosenbaum :: cgbr@cs.umass.edu
 @created: 6/6/18
 """
 
 
-class Meta(object):
+class SampleMetaInformation(object):
     """
-    Class Meta should be used to attach metainformation to samples
+    Class SampleMetaInformation should be used to store metainformation for each sample.
     """
 
     def __init__(self, task=None):

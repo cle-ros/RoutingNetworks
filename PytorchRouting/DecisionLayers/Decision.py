@@ -16,7 +16,7 @@ from PytorchRouting.RewardFunctions.PerAction.PerActionBaseReward import PerActi
 
 class Decision(nn.Module, metaclass=abc.ABCMeta):
     """
-    Class DecisionModule defines ...
+    Class DecisionModule defines the base class for all decision modules.
     """
 
     def __init__(

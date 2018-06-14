@@ -17,7 +17,7 @@ from ..Decision import Decision
 
 class PerTaskAssignment(Decision):
     """
-    Class REINFORCE defines ...
+    This simple class translates task assignments stored in the meta-information objects to actions.
     """
     def __init__(self, *args, **kwargs):
         Decision.__init__(self, None, None)

@@ -9,7 +9,7 @@ import abc
 
 class PerActionBaseReward(object, metaclass=abc.ABCMeta):
     """
-    Class BaseReward defines ...
+    Class BaseReward defines the base class for per-action rewards.
     """
 
     def __init__(self, *args, **kwargs):

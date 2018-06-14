@@ -13,16 +13,19 @@ from PytorchRouting.Helpers.RLSample import RLSample
 
 class Loss(nn.Module, metaclass=abc.ABCMeta):
     """
-    Class RoutingLoss defines ...
+    This function defines the combined module/decision loss functions. It performs four steps that will result in
+    separate losses for the modules and the decision makers:
+    1. it computes the module losses
+    2. it translates these module losses into per-sample reinforcement learning rewards
+    3. it uses these final rewards to compute the full rl-trajectories for each sample
+    4. it uses the decision-making specific loss functions to compute the total decision making loss
     """
 
-    def __init__(self, pytorch_loss_func, routing_reward_func):
+    def __init__(self, pytorch_loss_func, routing_reward_func, discounting=1.):
         nn.Module.__init__(self)
+        self._discounting = discounting
         self._loss_func = pytorch_loss_func
         self._reward_func = routing_reward_func
-
-    # def __getattr__(self, item):
-    #     return getattr(self._loss_func, item)
 
     def _get_rl_tuple_list(self, mys):
         rl_tuples = []

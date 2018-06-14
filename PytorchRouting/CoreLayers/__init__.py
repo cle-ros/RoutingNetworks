@@ -1,3 +1,3 @@
 from .Initialization import Initialization
-from .Loss import RoutingLoss
+from .Loss import Loss
 from .Selection import Selection

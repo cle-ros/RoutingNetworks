@@ -11,7 +11,8 @@ from .PerActionBaseReward import PerActionBaseReward
 
 class CollaborationReward(PerActionBaseReward):
     """
-    Class CollaborationReward defines ...
+    Class CollaborationReward defines a collaboration reward measured by the average probability
+    of taking the action taken by an agent.
     """
 
     def __init__(self, *args, **kwargs):

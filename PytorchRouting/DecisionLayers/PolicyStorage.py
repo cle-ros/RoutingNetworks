@@ -13,7 +13,7 @@ from PytorchRouting.Helpers.MLP import MLP
 
 class ApproxPolicyStorage(nn.Module, metaclass=abc.ABCMeta):
     """
-    Class ApproxPolicyStorageDecisionModule defines ...
+    Class ApproxPolicyStorage defines a simple module to store a policy approximator.
     """
     def __init__(self, approx=None, in_features=None, num_selections=None, hidden_dims=(), detach=True):
         nn.Module.__init__(self)
@@ -36,7 +36,7 @@ class ApproxPolicyStorage(nn.Module, metaclass=abc.ABCMeta):
 
 class TabularPolicyStorage(nn.Module, metaclass=abc.ABCMeta):
     """
-    Class ApproxPolicyStorageDecisionModule defines ...
+    Class TabularPolicyStorage defines a simple module to store a policy in tabular form.
     """
     def __init__(self, approx=None, in_features=None, num_selections=None, hidden_dims=()):
         nn.Module.__init__(self)

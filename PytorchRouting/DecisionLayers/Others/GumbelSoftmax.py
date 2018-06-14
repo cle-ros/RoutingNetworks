@@ -6,7 +6,6 @@ This file defines class GumbelSoftmax.
 """
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torch.autograd import Variable
 
 from ..Decision import Decision
@@ -14,11 +13,12 @@ from ..Decision import Decision
 
 class GumbelSoftmax(Decision):
     """
-    Class REINFORCE defines ...
+    Class GumbelSoftmax defines a decision making procedure that uses the GumbelSoftmax reparameterization trick
+    to perform differentiable sampling from the categorical distribution.
     """
     def __init__(self, *args, **kwargs):
         Decision.__init__(self, *args, **kwargs)
-        self._gumbel_softmax = GumbelSoftmax_()
+        self._gumbel_softmax = GumbelSoftmaxSampling()
 
     @staticmethod
     def _loss(sample):
@@ -30,9 +30,9 @@ class GumbelSoftmax(Decision):
         return xs*multiples, actions, logits
 
 
-class GumbelSoftmax_(nn.Module):
+class GumbelSoftmaxSampling(nn.Module):
     """
-    Class GumbelSoftmax defines ...
+    This class defines the core functionality to sample from a gumbel softmax distribution
     """
 
     def __init__(self, temperature_init=30, temperature_decay=0.9, hard=True, hook=None):

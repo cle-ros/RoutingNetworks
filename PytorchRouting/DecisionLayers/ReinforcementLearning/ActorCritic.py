@@ -13,7 +13,7 @@ from ..Decision import Decision
 
 class ActorCritic(Decision):
     """
-    Class REINFORCE defines ...
+    ActorCritic based decision making.
     """
 
     def _construct_policy_storage(self, *args, **kwargs):

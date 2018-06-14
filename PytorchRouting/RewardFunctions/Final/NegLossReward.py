@@ -9,7 +9,7 @@ from .BaseReward import BaseReward
 
 class NegLossReward(BaseReward):
     """
-    Class NegLossReward defines ...
+    Class NegLossReward defines the simplest reward function, expressed as the negative loss.
     """
 
     def __init__(self, *args, **kwargs):

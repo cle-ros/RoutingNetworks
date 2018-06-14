@@ -13,7 +13,7 @@ from ..Decision import Decision
 
 class WPL(Decision):
     """
-    Class REINFORCE defines ...
+    Weighted Policy Learner (WPL) Multi-Agent Reinforcement Learning based decision making.
     """
 
     def _construct_policy_storage(self, *args, **kwargs):

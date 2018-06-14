@@ -12,7 +12,7 @@ import torch.nn as nn
 class Selection(nn.Module):
     """
     Class RoutingWrapperModule defines a wrapper around a regular pytorch module that computes the actual routing
-    given a list of modules to choose from.
+    given a list of modules to choose from, and a list of actions to select a module for each sample in a batch.
     """
 
     def __init__(self, *modules):

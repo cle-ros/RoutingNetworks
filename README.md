@@ -1,7 +1,7 @@
 # Pytorch-Routing
 Pytorch-Routing is a pytorch-based implementation of 'RoutingNetworks':
 
-Clemens Rosenbaum, Tim Klinger, Matthew Riemer - _Routing Networks: Adaptive Selection of Non-Linear Functions for Multi-Task Learning_
+Clemens Rosenbaum, Tim Klinger, Matthew Riemer - _Routing Networks: Adaptive Selection of Non-Linear Functions for Multi-Task Learning_ (ICLR 2018).
 
 https://openreview.net/forum?id=ry8dvM-R-
 
@@ -88,4 +88,9 @@ module_loss, routing_loss = loss_func(batch_estimates, batch_true, meta_list)
 total_loss = module_loss + routing_loss
 total_loss.backward()
 opt.step()
+```
+Additionally, the code allows to have different learning rates for different components - such as for the decision-making networks - using pure Pytorch logic:
+```Python
+opt_decision = optim.SGD(decision_module.parameters, lr=decision_learning_rate)
+opt_module = optim.SGD([... all other modules ...], lr=module_learning_rate)
 ```

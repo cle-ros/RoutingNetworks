@@ -6,12 +6,13 @@ This file defines class RoutingTechnicalLayers.
 """
 import torch.nn as nn
 
-from PytorchRouting.Helpers.Meta import Meta
+from PytorchRouting.Helpers.SampleMetaInformation import SampleMetaInformation
 
 
 class Initialization(nn.Module):
     """
-    Class RoutingTechnicalLayers defines ...
+    The initialization class defines a thin layer that initializes the meta-information and actions - composing
+    the pytorch-routing information triplet.
     """
 
     def __init__(self):
@@ -19,7 +20,7 @@ class Initialization(nn.Module):
 
     def forward(self, xs, tasks=()):
         if tasks:
-            mxs = [Meta(task=t) for t in tasks]
+            mxs = [SampleMetaInformation(task=t) for t in tasks]
         else:
-            mxs = [Meta() for _ in xs]
+            mxs = [SampleMetaInformation() for _ in xs]
         return xs, mxs, None
