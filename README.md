@@ -12,7 +12,7 @@ This package provides an implementation of RoutingNetworks that tries to integra
 
 The basic functionality of routing is provided by four different kind of modules:
 
-#### PytorchRouting.CoreLayers.Initialization.Initialization
+### PytorchRouting.CoreLayers.Initialization.Initialization
 One of the problems of implementing RoutingNetworks with pytorch is that we need to track 'meta-information'. This meta-information consists of the trajectories necessary to later on train Reinforcement Learning based routers, and of the actions used for decisions. Consequently, the information passed from one Pytorch-Routing layer to the next is a triplet of the form `(batch, meta_info_list, actions)`.
 
 The initialization of the meta-information objects - one for each sample in a batch - is thus the first required step when using this package, and is achieved with the `Initialization` module.
@@ -22,7 +22,7 @@ batch, meta_list, actions = init(batch, tasks=())
 ```
 The initialization module takes the batch - in form of a Pytorch `Variable` (with the first dim as the batch dim) and an optional list of task-labels (for multi-task learning) and returns the required triplet `(batch, meta_info_list, actions)` (though with empty actions).
 
-#### PytorchRouting.Decision.*
+### PytorchRouting.Decision.*
 The next step in routing a network is to make a routing decision (i.e. creating a selection) for each sample. These layers - with one class for each decision making technique - take the Pytorch-Routing triplet, and make a decision for each sample in the batch. These decisions are logged in the meta-information objects, and returned as a `torch.LongTensor` as the third element of the Pytorch-Routing triplet:
 
 ```Python
@@ -41,7 +41,24 @@ batch, meta_list, new_actions = decision(batch, meta_list, actions)
 ```
 The constructor arcuments are as follows: `num_selections` defines the number of selections available in the next routed layer; `in_features` defines the dimensionality of one sample when passed into this layer (required to construct function approximators for policies); `num_agents` defines the number of agents available at this layer; `exploration` defines the exploration rate for agents that support it; `policy_storage_type` refers to how the agents' policies are stored, and can be either `approx` or `tabular`; `detach` is a bool and refers to whether or not the gradient flow is cut when passed into the agents's approximators; `approx_hidden_dims` defines the hidden layer dimensions if the agents construct their default policy approximator, an MLP; `approx_module` overrides all other approximator settings, and takes an already instantiated policy approximation module for its agents (which are not limited to MLPs); `additional_reward_function` takes as argument an instance of type `PytorchRouting.RewardFunctions.PerAction.*` and that specifies how per-action rewards should be calculated by the agents.
 
-#### PytorchRouting.CoreLayers.Selection
+#### _Dispatching_
+The `actions` argument to the layer call will be interpreted as the dispatcher actions specifying the agents to be selected:
+```Python
+# 1. getting the dispatcher actions
+batch, meta_list, dispatcher_actions = decision_dispatcher(batch, meta_list, [])
+# 2. passing the dispatcher actions to an agent
+batch, meta_list, selection_actions = decision_selector(batch, meta_list, dispatcher_actions)
+# 3. selecting the modules (see below)
+```
+Using a special decision module, this can also be used to implement per-task agents:
+```Python
+# 1. getting the per-task assignment actions
+batch, meta_list, per_task_actions = PytorchRouting.DecisionLayers.Others.PerTaskAssignment()(batch, meta_list, [])
+# 2. passing the task assignment preselections
+batch, meta_list, selection_actions = decision_selector(batch, meta_list, per_task_actions)
+# 3. selecting the modules (see below)
+```
+### PytorchRouting.CoreLayers.Selection
 Now that the actions have been computed, the actual selection of the function block is the next step. This functionality is provided by the `Selection` module:
 ```Python
 selection = Selection(*modules)
@@ -49,11 +66,13 @@ batch_out, meta_list, actions = selection(batch, meta_list, actions)
 ```
 Once the module has been initialized by passing in a list of initialized modules, it's application is straightforward. An example of how to initialize the selection layer can look as follows:
 ```Python
-selection = Selection(*[nn.Linear(in_dim, out_dim) for _ in range(5)])  # for 5 different fully connected layers with the same number of parameterss
-selection = Selection(MLP(in_dim, out_dim, hidden=(64, 128)), MLP(in_dim, out_dim, hidden=(64, 64)))  # for 2 different MLP's, with different number of parameters.
+# for 5 different fully connected layers with the same number of parameters
+selection = Selection(*[nn.Linear(in_dim, out_dim) for _ in range(5)])
+# for 2 different MLP's, with different number of parameters.
+selection = Selection(MLP(in_dim, out_dim, hidden=(64, 128)), MLP(in_dim, out_dim, hidden=(64, 64)))
 ```
 
-#### PytorchRouting.CoreLayers.Loss
+### PytorchRouting.CoreLayers.Loss
 The final function is a Pytorch-Routing specific loss module. This is required as the loss from the normal training needs to be translated (per-sample) to a Reinforcement Learning reward signal:
 ```Python
 loss_func = Loss(pytorch_loss_func, routing_reward_func)
