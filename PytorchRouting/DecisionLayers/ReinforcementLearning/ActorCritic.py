@@ -8,16 +8,16 @@ import copy
 import torch
 import torch.nn.functional as F
 
-from ..DecisionLayer import DecisionLayer
+from ..Decision import Decision
 
 
-class ActorCritic(DecisionLayer):
+class ActorCritic(Decision):
     """
     Class REINFORCE defines ...
     """
 
     def _construct_policy_storage(self, *args, **kwargs):
-        DecisionLayer._construct_policy_storage(self, *args, **kwargs)
+        Decision._construct_policy_storage(self, *args, **kwargs)
         self._value_mem = copy.deepcopy(self._policy)
 
     @staticmethod

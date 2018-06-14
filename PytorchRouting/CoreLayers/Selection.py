@@ -9,22 +9,16 @@ import torch.nn as nn
 # from torch.multiprocessing import Pool
 
 
-class SelectionLayer(nn.Module):
+class Selection(nn.Module):
     """
     Class RoutingWrapperModule defines a wrapper around a regular pytorch module that computes the actual routing
     given a list of modules to choose from.
     """
 
-    def __init__(self, module_defs, threads=8):
+    def __init__(self, *modules):
         nn.Module.__init__(self)
-        self._threads = threads
-        self._initialize_grid(module_defs)
-
-    def _initialize_grid(self, module_defs):
-        submodules = []
-        for tipe, params in module_defs:
-            submodules.append(tipe(*params))
-        self._submodules = nn.ModuleList(submodules)
+        # self._threads = threads
+        self._submodules = nn.ModuleList(modules)
 
     def _apply_parallel(self, arg):
         x, xm = arg

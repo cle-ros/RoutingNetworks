@@ -7,10 +7,10 @@ This file defines class REINFORCE.
 import torch
 import torch.nn.functional as F
 
-from ..DecisionLayer import DecisionLayer
+from ..Decision import Decision
 
 
-class QLearning(DecisionLayer):
+class QLearning(Decision):
     """
     Class REINFORCE defines ...
     """

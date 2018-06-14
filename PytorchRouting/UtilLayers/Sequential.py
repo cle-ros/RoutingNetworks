@@ -10,7 +10,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
-from PytorchRouting.CoreLayers.InitializationLayer import InitializationLayer
+from PytorchRouting.CoreLayers.Initialization import Initialization
 
 
 class Sequential(nn.Sequential):
@@ -22,7 +22,7 @@ class Sequential(nn.Sequential):
     """
 
     def __init__(self, *args):
-        additional_modules = OrderedDict([('initialization', InitializationLayer())])
+        additional_modules = OrderedDict([('initialization', Initialization())])
         if isinstance(args, OrderedDict):
             args = additional_modules.update(args)
         else:

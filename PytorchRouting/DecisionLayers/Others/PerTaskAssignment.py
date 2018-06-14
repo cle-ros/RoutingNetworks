@@ -12,15 +12,15 @@ This file defines class REINFORCE.
 """
 import torch
 
-from ..DecisionLayer import DecisionLayer
+from ..Decision import Decision
 
 
-class PerTaskAssignment(DecisionLayer):
+class PerTaskAssignment(Decision):
     """
     Class REINFORCE defines ...
     """
     def __init__(self, *args, **kwargs):
-        DecisionLayer.__init__(self, None, None)
+        Decision.__init__(self, None, None)
 
     @staticmethod
     def _loss(sample):

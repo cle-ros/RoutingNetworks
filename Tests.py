@@ -12,7 +12,7 @@ from torch.autograd import Variable
 
 from PytorchRouting.UtilLayers import Sequential
 
-from PytorchRouting.CoreLayers import InitializationLayer, RoutingLossLayer, SelectionLayer
+from PytorchRouting.CoreLayers import Initialization, RoutingLoss, Selection
 from PytorchRouting.DecisionLayers import REINFORCE, QLearning, SARSA, ActorCritic, GumbelSoftmax, PerTaskAssignment, \
     WPL
 from PytorchRouting.RewardFunctions.Final import NegLossReward
@@ -73,12 +73,12 @@ class Model(nn.Module):
             PerTaskAssignment(),
             ActorCritic(first_layer_width, routing_input_dim, num_agents=1, exploration=0.1,
                 policy_storage_type='approx', detach=False, approx_hidden_dims=(128, 128),),
-            SelectionLayer([(nn.Linear, (routing_input_dim, 128)) for _ in range(first_layer_width)]),
-            SelectionLayer([(nn.Linear, (128, 128)) for _ in range(first_layer_width)]),
-            SelectionLayer([(nn.Linear, (128, out_dim)) for _ in range(first_layer_width)]),
+            Selection([(nn.Linear, (routing_input_dim, 128)) for _ in range(first_layer_width)]),
+            Selection([(nn.Linear, (128, 128)) for _ in range(first_layer_width)]),
+            Selection([(nn.Linear, (128, out_dim)) for _ in range(first_layer_width)]),
         )
 
-        self._loss_layer = RoutingLossLayer(torch.nn.CrossEntropyLoss, NegLossReward, {}, {}, 1.)
+        self._loss_layer = RoutingLoss(torch.nn.CrossEntropyLoss, NegLossReward, {}, {}, 1.)
 
     def forward(self, x):
         y = self.convolutions(x)

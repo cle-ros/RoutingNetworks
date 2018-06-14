@@ -1,14 +1,14 @@
 """
-This file defines class Sample.
+This file defines class RLSample.
 
 @author: Clemens Rosenbaum :: cgbr@cs.umass.edu
 @created: 6/8/18
 """
 
 
-class Sample(object):
+class RLSample(object):
     """
-    Sample defines a simple struct-like class that is used to combine RL-relevant training information.
+    RLSample defines a simple struct-like class that is used to combine RL-relevant training information.
     (i.e. state, action, reward, next state, next action)
     """
 

@@ -1,3 +1,3 @@
-from .InitializationLayer import InitializationLayer
-from .RoutingLossLayer import RoutingLossLayer
-from .SelectionLayer import SelectionLayer
+from .Initialization import Initialization
+from .Loss import RoutingLoss
+from .Selection import Selection

@@ -9,15 +9,15 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
-from ..DecisionLayer import DecisionLayer
+from ..Decision import Decision
 
 
-class GumbelSoftmax(DecisionLayer):
+class GumbelSoftmax(Decision):
     """
     Class REINFORCE defines ...
     """
     def __init__(self, *args, **kwargs):
-        DecisionLayer.__init__(self, *args, **kwargs)
+        Decision.__init__(self, *args, **kwargs)
         self._gumbel_softmax = GumbelSoftmax_()
 
     @staticmethod

@@ -9,7 +9,7 @@ import torch.nn as nn
 from PytorchRouting.Helpers.Meta import Meta
 
 
-class InitializationLayer(nn.Module):
+class Initialization(nn.Module):
     """
     Class RoutingTechnicalLayers defines ...
     """

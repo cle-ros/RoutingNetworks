@@ -6,10 +6,10 @@ This file defines class REINFORCE.
 """
 import torch
 
-from ..DecisionLayer import DecisionLayer
+from ..Decision import Decision
 
 
-class REINFORCE(DecisionLayer):
+class REINFORCE(Decision):
     """
     Class REINFORCE defines ...
     """

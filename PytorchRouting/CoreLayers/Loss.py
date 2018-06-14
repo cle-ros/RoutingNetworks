@@ -1,5 +1,5 @@
 """
-This file defines class RoutingLossLayer.
+This file defines class RoutingLoss.
 
 @author: Clemens Rosenbaum :: cgbr@cs.umass.edu
 @created: 6/8/18
@@ -8,19 +8,18 @@ import abc
 import torch
 import torch.nn as nn
 
-from PytorchRouting.Helpers.Sample import Sample
+from PytorchRouting.Helpers.RLSample import RLSample
 
 
-class RoutingLossLayer(nn.Module, metaclass=abc.ABCMeta):
+class Loss(nn.Module, metaclass=abc.ABCMeta):
     """
-    Class RoutingLossLayer defines ...
+    Class RoutingLoss defines ...
     """
 
-    def __init__(self, pytorch_loss_class, routing_reward_class, loss_args, reward_args, discouting=1.):
+    def __init__(self, pytorch_loss_func, routing_reward_func):
         nn.Module.__init__(self)
-        self._loss_func = pytorch_loss_class(**loss_args)
-        self._reward_func = routing_reward_class(**reward_args)
-        self._discounting = discouting
+        self._loss_func = pytorch_loss_func
+        self._reward_func = routing_reward_func
 
     # def __getattr__(self, item):
     #     return getattr(self._loss_func, item)
@@ -40,7 +39,7 @@ class RoutingLossLayer(nn.Module, metaclass=abc.ABCMeta):
             for i, rew in enumerate(reversed(rewards)):
                 returns.append(rew + returns[-1] * (self._discounting ** (i - 1)))
             returns = torch.cumsum(torch.cat(list(reversed(returns[1:])), dim=0), 0)[:-1]
-            rl_tuples += [Sample(lf, s, a, rew, ret, ns, na) for lf, s, a, rew, ret, ns, na in
+            rl_tuples += [RLSample(lf, s, a, rew, ret, ns, na) for lf, s, a, rew, ret, ns, na in
                           zip(my.loss_funcs, states, actions, rewards, returns,
                               (states + [None])[1:], (actions + [None])[1:])
                           ]

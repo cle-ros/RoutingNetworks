@@ -14,7 +14,7 @@ from .PolicyStorage import ApproxPolicyStorage, TabularPolicyStorage
 from PytorchRouting.RewardFunctions.PerAction.PerActionBaseReward import PerActionBaseReward
 
 
-class DecisionLayer(nn.Module, metaclass=abc.ABCMeta):
+class Decision(nn.Module, metaclass=abc.ABCMeta):
     """
     Class DecisionModule defines ...
     """
@@ -29,8 +29,7 @@ class DecisionLayer(nn.Module, metaclass=abc.ABCMeta):
             detach=True,
             approx_hidden_dims=(),
             approx_module=None,
-            additional_reward_class=PerActionBaseReward,
-            additional_reward_args={}
+            additional_reward_func=PerActionBaseReward()
         ):
         nn.Module.__init__(self)
         self._in_features = in_features
@@ -39,7 +38,7 @@ class DecisionLayer(nn.Module, metaclass=abc.ABCMeta):
         self._exploration = exploration
         self._detach = detach
         self._construct_policy_storage(policy_storage_type, approx_module, approx_hidden_dims)
-        self.additional_reward_func = additional_reward_class(*additional_reward_args)
+        self.additional_reward_func = additional_reward_func
 
     @abc.abstractmethod
     def _forward(self, xs, mxs, prior_action): return torch.FloatTensor(1, 1), [], torch.FloatTensor(1, 1)
