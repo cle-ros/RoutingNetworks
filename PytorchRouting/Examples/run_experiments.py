@@ -45,14 +45,22 @@ def run_experiment(model, dataset):
             test_samples_seen += len(batch[0])
             module_loss, decision_loss, accuracy = compute_batch(model, batch)
             test_log += np.array([module_loss.tolist(), decision_loss.tolist(), accuracy])
-        print('Epoch {} finished. Training: Model loss: {}, Routing loss: {}, Accuracy: {}\n'
-              '                   Testing:  Model loss: {}, Routing loss: {}, Accuracy: {}'.format(
-            epoch + 1, *(train_log/train_samples_seen).round(2), *(test_log/test_samples_seen).round(2)))
+        print('Epoch {} finished.\n'
+              '    Training averages: Model loss: {}, Routing loss: {}, Accuracy: {}\n'
+              '    Testing averages:  Model loss: {}, Routing loss: {}, Accuracy: {}'.format(
+            epoch + 1, *(train_log/train_samples_seen).round(3), *(test_log/test_samples_seen).round(3)))
 
 
 if __name__ == '__main__':
-    dataset = MNIST_MTL(64, data_files=['./Datasets/mnist.pkl.gz'])
+    # MNIST
+    # dataset = MNIST_MTL(64, data_files=['./Datasets/mnist.pkl.gz'])
     # model = PerTask_all_fc(1, 288, 2, dataset.num_tasks, dataset.num_tasks)
-    model = WPL_routed_all_fc(1, 288, 2, dataset.num_tasks, dataset.num_tasks)
+    # model = WPL_routed_all_fc(1, 288, 2, dataset.num_tasks, dataset.num_tasks)
+
+    # CIFAR
+    dataset = CIFAR100MTL(64, data_files=['./Datasets/cifar-100-py/train', './Datasets/cifar-100-py/test'])
+    # model = PerTask_all_fc(3, 512, 5, dataset.num_tasks, dataset.num_tasks)
+    model = WPL_routed_all_fc(3, 512, 5, dataset.num_tasks, dataset.num_tasks)
+
     model.cuda()
     run_experiment(model, dataset)

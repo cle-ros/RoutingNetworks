@@ -4,17 +4,12 @@ This file defines class Models.
 @author: Clemens Rosenbaum :: cgbr@cs.umass.edu
 @created: 6/14/18
 """
-import gzip
-from collections import deque
 try:
     import cPickle as pickle
 except ImportError:
     import pickle
-from scipy.misc import imresize
-import numpy as np
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
 
 from PytorchRouting.UtilLayers import Sequential
 

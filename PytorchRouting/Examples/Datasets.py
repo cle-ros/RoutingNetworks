@@ -14,11 +14,8 @@ except ImportError:
     import pickle
 
 import numpy as np
-from scipy.misc import imresize
 
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 from torch.autograd import Variable
 
 
@@ -72,7 +69,7 @@ class MNIST_MTL(Dataset):
         with gzip.open(self._data_files[0], 'rb') as f:
             u = pickle._Unpickler(f)
             u.encoding = 'latin1'
-            (train_samples, train_labels), (valid_samples, valid_labels), (test_samples, test_labels) = u.load()
+            (train_samples, train_labels), _, (test_samples, test_labels) = u.load()
         train_samples = self._process_list_of_samples(train_samples)
         test_samples = self._process_list_of_samples(test_samples)
         mtl_train_set = []
@@ -101,8 +98,8 @@ class CIFAR100MTL(Dataset):
             with open(fn, 'rb') as f:
                 data_dict = pickle.load(f, encoding='latin1')
             samples += [np.resize(s, (3, 32, 32)) for s in data_dict['data']]
-            labels += [int(fl) for fl in data_dict['coarse_labels']]
-            tasks += [int(cl) % 5 for cl in data_dict['fine_labels']]
-            datasets.append(zip(samples, labels, tasks))
+            tasks += [int(fl) for fl in data_dict['coarse_labels']]
+            labels += [int(cl) % 5 for cl in data_dict['fine_labels']]
+            datasets.append(list(zip(samples, labels, tasks)))
         train_set, test_set = datasets
         return train_set, test_set
