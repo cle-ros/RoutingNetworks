@@ -1,1 +1,2 @@
 from .NegLossReward import NegLossReward
+from .CorrectClassifiedReward import CorrectClassifiedReward

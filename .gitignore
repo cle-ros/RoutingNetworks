@@ -27,6 +27,7 @@ MANIFEST
 
 # datasets
 *.pkl.*
+Datasets/
 
 # PyCharm
 .idea/

@@ -91,7 +91,7 @@ class Model(nn.Module):
 
 
 if __name__ == '__main__':
-    data = MNIST().load_data('./mnist.pkl.gz')
+    data = MNIST().load_data('./Datasets/mnist.pkl.gz')
     model = Model()
     model.cuda()
     batch_size = 64

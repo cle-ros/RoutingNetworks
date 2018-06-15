@@ -12,7 +12,7 @@ class PerActionBaseReward(object, metaclass=abc.ABCMeta):
     Class BaseReward defines the base class for per-action rewards.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self):
         self._dists = []
         self._actions = []
         self._precomp = None

@@ -15,5 +15,5 @@ class NegLossReward(BaseReward):
     def __init__(self, *args, **kwargs):
         BaseReward.__init__(self, *args, **kwargs)
 
-    def forward(self, loss):
+    def forward(self, loss, yest, ytrue):
         return -loss.data

@@ -25,6 +25,7 @@ class Loss(nn.Module, metaclass=abc.ABCMeta):
         nn.Module.__init__(self)
         self._discounting = discounting
         self._loss_func = pytorch_loss_func
+        self._loss_func.reduce = False
         self._reward_func = routing_reward_func
 
     def _get_rl_tuple_list(self, mys):
@@ -41,7 +42,7 @@ class Loss(nn.Module, metaclass=abc.ABCMeta):
             returns = [0.]
             for i, rew in enumerate(reversed(rewards)):
                 returns.append(rew + returns[-1] * (self._discounting ** (i - 1)))
-            returns = torch.cumsum(torch.cat(list(reversed(returns[1:])), dim=0), 0)[:-1]
+            returns = torch.cumsum(torch.stack(list(reversed(returns[1:])), dim=0), 0)[:-1]
             rl_tuples += [RLSample(lf, s, a, rew, ret, ns, na) for lf, s, a, rew, ret, ns, na in
                           zip(my.loss_funcs, states, actions, rewards, returns,
                               (states + [None])[1:], (actions + [None])[1:])
@@ -51,11 +52,12 @@ class Loss(nn.Module, metaclass=abc.ABCMeta):
         return rl_tuples
 
     def forward(self, ysest, ystrue, mys):
-        module_loss = self._loss_func(ysest, ystrue).unsqueeze(-1)
-        for l, my in zip(module_loss.split(1, dim=0), mys):
-            my.final_reward = self._reward_func(l)
+        module_loss = self._loss_func(ysest, ystrue.squeeze()).unsqueeze(-1)
+        for l, my, yest, ytrue in zip(module_loss.split(1, dim=0), mys, ysest.split(1, dim=0), ystrue.split(1, dim=0)):
+            my.final_reward = self._reward_func(l, yest, ytrue)
+        module_loss = torch.sum(module_loss)
         rl_tuples = self._get_rl_tuple_list(mys)
         routing_loss = 0.
         for sample in rl_tuples:
-            routing_loss += sample.loss_function(sample)
+            routing_loss += sample.loss_function(sample).squeeze()
         return module_loss, routing_loss

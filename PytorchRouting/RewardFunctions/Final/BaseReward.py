@@ -21,4 +21,4 @@ class BaseReward(nn.Module, metaclass=abc.ABCMeta):
         self._scale = scale
 
     @abc.abstractmethod
-    def forward(self, loss): pass
+    def forward(self, loss, yest, ytrue): pass
