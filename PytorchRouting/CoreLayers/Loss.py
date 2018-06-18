@@ -38,7 +38,7 @@ class Loss(nn.Module, metaclass=abc.ABCMeta):
             for state, action, reward_func in zip(states, actions, my.reward_func):
                 rewards.append(reward_func.get_reward(state, action))
                 reward_functions.add(reward_func)
-            rewards.append(my.final_reward)
+            rewards.append(my.final_reward.unsqueeze(0))
             returns = [0.]
             for i, rew in enumerate(reversed(rewards)):
                 returns.append(rew + returns[-1] * (self._discounting ** (i - 1)))

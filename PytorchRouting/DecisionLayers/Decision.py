@@ -88,7 +88,7 @@ class Decision(nn.Module, metaclass=abc.ABCMeta):
             for x, mx, pa in zip(xs.split(1, dim=0), mxs, prior_actions):
                 y, action, generating_dist = self._forward(x, [mx], pa)
                 actions.append(action)
-                dists.append(generating_dist)
+                dists.append(generating_dist[0])
                 ys.append(y)
             actions = torch.cat(actions, dim=0)
             dists = torch.cat(dists, dim=0)

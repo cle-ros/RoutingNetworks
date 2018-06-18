@@ -10,7 +10,7 @@ Multi-task learning (MTL) with neural networks leverages commonalities in tasks 
 ## Implementation
 This package provides an implementation of RoutingNetworks that tries to integrate with Pytorch (https://pytorch.org/) as smoothly as possible by providing RoutingNetwork "layers", each implemented as a `nn.Module`.
 
-(To jump to examples, see [here](EXAMPLES.md)).
+(To jump the explanations and go to the examples, see [here](EXAMPLES.md)).
 
 The basic functionality of routing is provided by four different kind of modules:
 

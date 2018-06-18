@@ -23,7 +23,7 @@ class CollaborationReward(PerActionBaseReward):
     def get_reward(self, dist, action):
         if self._precomp is None:
             action_count = torch.zeros(len(self._actions), self._num_actions).cuda()
-            action_count = action_count.scatter(1, torch.stack(self._actions, 0).unsqueeze(1), 1.)
+            action_count = action_count.scatter(1, torch.stack(self._actions, 0), 1.)
             action_count = torch.sum(action_count, dim=0)/len(self._actions)
             self._precomp = action_count
         return self._precomp[action]
