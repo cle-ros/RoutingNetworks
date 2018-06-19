@@ -87,14 +87,19 @@ class Decision(nn.Module, metaclass=abc.ABCMeta):
             actions, dists, ys = [], [], []
             for x, mx, pa in zip(xs.split(1, dim=0), mxs, prior_actions):
                 y, action, generating_dist = self._forward(x, [mx], pa)
+                if len(generating_dist.size()) < 3:
+                    # some "states" can be rank 2 (e.g. actor critic's policy value tuple). to make indexing
+                    #   work the same all over, we thus want all states be of shape (batch x actiondim x sth)
+                    generating_dist = generating_dist.unsqueeze(-1)
                 actions.append(action)
-                dists.append(generating_dist[0])
+                dists.append(generating_dist)
                 ys.append(y)
             actions = torch.cat(actions, dim=0)
             dists = torch.cat(dists, dim=0)
             ys = torch.cat(ys, dim=0)
         else:
             ys, actions, dists = self._forward(xs, mxs, 0)
+        actions = actions.squeeze()
         for a, d, mx in zip(actions, dists.split(1, dim=0), mxs):
             mx.append('actions', a)
             mx.append('states', d)

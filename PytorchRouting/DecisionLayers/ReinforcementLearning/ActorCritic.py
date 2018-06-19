@@ -22,8 +22,8 @@ class ActorCritic(Decision):
 
     @staticmethod
     def _loss(sample):
-        act_loss = - sample.state[:, 0, sample.action] * (sample.state[:, 1, sample.action] - sample.cum_return)
-        ret_loss = F.smooth_l1_loss(sample.state[:, 1, sample.action], sample.cum_return).unsqueeze(-1)
+        act_loss = - sample.state[:, sample.action, 0] * (sample.state[:, sample.action, 1] - sample.cum_return)
+        ret_loss = F.smooth_l1_loss(sample.state[:, sample.action, 1], sample.cum_return).unsqueeze(-1)
         return act_loss + ret_loss
 
     def _forward(self, xs, mxs, agent):
@@ -31,5 +31,5 @@ class ActorCritic(Decision):
         values = self._value_mem[agent](xs)
         distribution = torch.distributions.Categorical(logits=policy)
         actions = distribution.sample()
-        state = torch.stack([distribution.logits, values], 1)
+        state = torch.stack([distribution.logits, values], 2)
         return xs, actions, state
