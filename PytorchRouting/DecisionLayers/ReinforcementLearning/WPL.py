@@ -36,6 +36,9 @@ class WPL(Decision):
         policy = policy/policy.sum(dim=1)
         values = self._value_mem[agent](xs)
         distribution = torch.distributions.Categorical(probs=policy)
-        actions = distribution.sample()
+        if self.training:
+            actions = distribution.sample()
+        else:
+            actions = distribution.logits.max(dim=1)[1]
         state = torch.stack([distribution.logits, values], 2)
         return xs, actions, state

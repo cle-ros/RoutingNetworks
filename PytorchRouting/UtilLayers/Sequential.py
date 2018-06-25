@@ -40,5 +40,10 @@ class Sequential(nn.Sequential):
         initialization_module = self._modules[list(self._modules.keys())[0]]
         ys, meta, actions = initialization_module(x, tasks=tasks)
         for name, mod in list(self._modules.items())[1:]:
-            ys, meta, actions = mod(ys, meta, actions)
+            if isinstance(mod, Selection) or isinstance(mod, Decision):
+                ys, meta, actions = mod(ys, meta, actions)
+            elif isinstance(mod, nn.Module):
+                ys = mod(ys)
+            else:
+                raise ValueError('Sequential can only be initialized with nn.Modules.')
         return ys, meta

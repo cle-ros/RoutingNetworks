@@ -26,7 +26,11 @@ class GumbelSoftmax(Decision):
 
     def _forward(self, xs, mxs, agent):
         logits = self._policy[agent](xs)
-        actions, multiples = self._gumbel_softmax.sample(logits)
+        if not self.training:
+            actions, multiples = self._gumbel_softmax.sample(logits)
+        else:
+            actions = logits.max(dim=1)[1]
+            multiples = 1.
         return xs*multiples, actions, logits
 
 

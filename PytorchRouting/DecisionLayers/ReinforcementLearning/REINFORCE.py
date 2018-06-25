@@ -20,5 +20,8 @@ class REINFORCE(Decision):
     def _forward(self, xs, mxs, agent):
         policy = self._policy[agent](xs)
         distribution = torch.distributions.Categorical(logits=policy)
-        actions = distribution.sample()
+        if self.training:
+            actions = distribution.sample()
+        else:
+            actions = distribution.logits.max(dim=1)[1]
         return xs, actions, distribution.logits

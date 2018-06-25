@@ -30,6 +30,9 @@ class ActorCritic(Decision):
         policy = self._policy[agent](xs)
         values = self._value_mem[agent](xs)
         distribution = torch.distributions.Categorical(logits=policy)
-        actions = distribution.sample()
+        if self.training:
+            actions = distribution.sample()
+        else:
+            actions = distribution.logits.max(dim=1)[1]
         state = torch.stack([distribution.logits, values], 2)
         return xs, actions, state

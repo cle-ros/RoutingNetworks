@@ -28,9 +28,11 @@ class QLearning(Decision):
         exploration_dist = torch.ones(batch_dim, 2).float()
         exploration_dist[:, 0] *= 1-self._exploration
         exploration_dist[:, 1] *= self._exploration
-        explore_bin = torch.multinomial(exploration_dist, 1).cuda()
+        explore_bin = torch.multinomial(exploration_dist, 1).to(xs.device)
         _, greedy = policy.max(dim=1)
-        explore = torch.randint(low=0, high=policy.size()[1], size=(1, batch_dim)).cuda().long()
-        actions = torch.where(explore_bin.byte(), explore, greedy.unsqueeze(-1))
-        # compute the states
+        if self.training:
+            explore = torch.randint(low=0, high=policy.size()[1], size=(1, batch_dim)).to(xs.device).long()
+            actions = torch.where(explore_bin.byte(), explore, greedy.unsqueeze(-1))
+        else:
+            actions = greedy
         return xs, actions, policy
