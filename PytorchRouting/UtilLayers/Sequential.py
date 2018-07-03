@@ -5,12 +5,11 @@ This file defines class RoutingSequential.
 @created: 6/13/18
 """
 from collections import OrderedDict
-import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.autograd import Variable
 
 from PytorchRouting.CoreLayers.Initialization import Initialization
+from PytorchRouting.CoreLayers.Selection import Selection
+from PytorchRouting.DecisionLayers.Decision import Decision
 
 
 class Sequential(nn.Sequential):

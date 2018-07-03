@@ -19,6 +19,8 @@ class Selection(nn.Module):
         nn.Module.__init__(self)
         # self._threads = threads
         self._submodules = nn.ModuleList(modules)
+        self._selection_log = []
+        self._logging_selections = False
 
     def _apply_parallel(self, arg):
         x, xm = arg
@@ -41,5 +43,16 @@ class Selection(nn.Module):
             y = self._submodules[na](x)
             ys.append(y)
         ys = torch.cat(ys, 0)
+        if self._logging_selections:
+            self._selection_log += actions.squeeze().cpu().tolist()
         return ys, mxs, actions
 
+    def start_logging_selections(self):
+        self._logging_selections = True
+
+    def stop_logging_and_get_selections(self, add_to_old=False):
+        self._logging_selections = False
+        logs = list(set([int(s) for s in self._selection_log]))
+        del self._selection_log[:]
+        self.last_selection_freeze = logs + self.last_selection_freeze if add_to_old else logs
+        return self.last_selection_freeze

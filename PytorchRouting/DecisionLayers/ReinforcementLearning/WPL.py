@@ -22,7 +22,7 @@ class WPL(Decision):
 
     @staticmethod
     def _loss(sample):
-        grad_est = sample.state[:, sample.action, 1] - sample.cum_return
+        grad_est = sample.cum_return - sample.state[:, sample.action, 1]
         grad_projected = torch.where(grad_est < 0, 1. + grad_est, 2. - grad_est)
         prob_taken = sample.state[:, sample.action, 0]
         act_loss = F.smooth_l1_loss(prob_taken, (prob_taken * grad_projected).data)
@@ -32,8 +32,8 @@ class WPL(Decision):
     def _forward(self, xs, mxs, agent):
         policy = self._policy[agent](xs)
         # policy = F.relu(policy) - F.relu(policy - 1.) + 1e-6
-        policy = policy - policy.min(dim=1)[0] + 1e-6
-        policy = policy/policy.sum(dim=1)
+        policy = policy - policy.min(dim=1)[0].unsqueeze(-1).expand_as(policy) + 1e-6
+        policy = policy/policy.sum(dim=1).unsqueeze(-1).expand_as(policy)
         values = self._value_mem[agent](xs)
         distribution = torch.distributions.Categorical(probs=policy)
         if self.training:

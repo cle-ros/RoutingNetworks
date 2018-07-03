@@ -46,44 +46,11 @@ class Dataset(object, metaclass=abc.ABCMeta):
         return next(self._iterator)
 
     def enter_train_mode(self):
+        random.shuffle(self._train_set)
         self._iterator = self._batched_iter(self._train_set, self._batch_size)
 
     def enter_test_mode(self):
         self._iterator = self._batched_iter(self._test_set, self._batch_size)
-
-
-class MNIST_MTL(Dataset):
-    def __init__(self, *args, **kwargs):
-        Dataset.__init__(self, *args, **kwargs)
-        self.num_tasks = 10
-
-    @staticmethod
-    def _process_list_of_samples(samples):
-        processed = []
-        for s in samples:
-            s = np.array(s).reshape((1, 28, 28))
-            processed.append(s)
-        return processed
-
-    def _get_datasets(self):
-        with gzip.open(self._data_files[0], 'rb') as f:
-            u = pickle._Unpickler(f)
-            u.encoding = 'latin1'
-            (train_samples, train_labels), _, (test_samples, test_labels) = u.load()
-        train_samples = self._process_list_of_samples(train_samples)
-        test_samples = self._process_list_of_samples(test_samples)
-        mtl_train_set = []
-        mtl_test_set = []
-        for task in range(10):
-            for sample, ground_label in zip(train_samples, train_labels):
-                label = int(ground_label == task)
-                mtl_train_set.append((sample, label, task))
-            for sample, ground_label in zip(test_samples, test_labels):
-                label = int(ground_label == task)
-                mtl_test_set.append((sample, label, task))
-        random.shuffle(mtl_train_set)
-        random.shuffle(mtl_test_set)
-        return mtl_train_set, mtl_test_set
 
 
 class CIFAR100MTL(Dataset):

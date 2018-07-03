@@ -41,7 +41,8 @@ class Decision(nn.Module, metaclass=abc.ABCMeta):
         self.additional_reward_func = additional_reward_func
 
     @abc.abstractmethod
-    def _forward(self, xs, mxs, prior_action): return torch.FloatTensor(1, 1), [], torch.FloatTensor(1, 1)
+    def _forward(self, xs, mxs, prior_action):
+        return torch.FloatTensor(1, 1), [], torch.FloatTensor(1, 1)
 
     @staticmethod
     @abc.abstractmethod

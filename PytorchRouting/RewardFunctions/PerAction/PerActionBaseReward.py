@@ -5,6 +5,7 @@ This file defines class BaseReward.
 @created: 6/8/18
 """
 import abc
+import torch
 
 
 class PerActionBaseReward(object, metaclass=abc.ABCMeta):
@@ -27,4 +28,4 @@ class PerActionBaseReward(object, metaclass=abc.ABCMeta):
         self._precomp = None
 
     def get_reward(self, dist, action):
-        return 0.
+        return torch.FloatTensor([0.]).to(action.device)

@@ -83,10 +83,10 @@ module_loss, routing_loss = loss_func(batch_estimates, batch_true, meta_list)
 The loss module is instantiated by passing in two different other modules - a pytorch loss function (i.e. a `nn.*Loss*` module) and a reward function (from `PytorchRouting.RewardFunctions.Final.*`) to translate to a reward. Once instantiated, it takes different arguments than the other "layer-like" modules of Pytorch-Routing. These arguments are the batch estimates, i.e. the first output of the routing-triplet, the true targets and the meta-list, i.e. the second output of the routing-triplet. An example could be:
 ```Python
 loss_func = Loss(torch.nn.CrossEntropyLoss(), NegLossReward())
+module_loss, routing_loss = loss_func(batch_estimates, batch_true, meta_list)
 ```
 To train, we can then simply use backprop on the loss and take an optimization step:
 ```Python
-module_loss, routing_loss = loss_func(batch_estimates, batch_true, meta_list)
 total_loss = module_loss + routing_loss
 total_loss.backward()
 opt.step()
