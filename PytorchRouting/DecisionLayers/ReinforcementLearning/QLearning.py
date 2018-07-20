@@ -31,7 +31,7 @@ class QLearning(Decision):
         explore_bin = torch.multinomial(exploration_dist, 1).to(xs.device)
         _, greedy = policy.max(dim=1)
         if self.training:
-            explore = torch.randint(low=0, high=policy.size()[1], size=(1, batch_dim)).to(xs.device).long()
+            explore = torch.randint(low=0, high=policy.size()[1], size=(batch_dim, 1)).to(xs.device).long()
             actions = torch.where(explore_bin.byte(), explore, greedy.unsqueeze(-1))
         else:
             actions = greedy

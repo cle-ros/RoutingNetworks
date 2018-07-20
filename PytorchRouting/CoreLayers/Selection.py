@@ -15,8 +15,9 @@ class Selection(nn.Module):
     given a list of modules to choose from, and a list of actions to select a module for each sample in a batch.
     """
 
-    def __init__(self, *modules):
+    def __init__(self, *modules, name=''):
         nn.Module.__init__(self)
+        self.name = name
         # self._threads = threads
         self._submodules = nn.ModuleList(modules)
         self._selection_log = []

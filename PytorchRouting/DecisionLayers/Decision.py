@@ -100,7 +100,9 @@ class Decision(nn.Module, metaclass=abc.ABCMeta):
             ys = torch.cat(ys, dim=0)
         else:
             ys, actions, dists = self._forward(xs, mxs, 0)
-        actions = actions.squeeze()
+
+        actions = actions.reshape(-1)  # flattens the actions tensor, but does not produce a scalar
+
         for a, d, mx in zip(actions, dists.split(1, dim=0), mxs):
             mx.append('actions', a)
             mx.append('states', d)

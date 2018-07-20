@@ -22,9 +22,13 @@ class ActorCritic(Decision):
 
     @staticmethod
     def _loss(sample):
-        act_loss = - sample.state[:, sample.action, 0] * (sample.state[:, sample.action, 1] - sample.cum_return)
-        ret_loss = F.smooth_l1_loss(sample.state[:, sample.action, 1], sample.cum_return).unsqueeze(-1)
-        return act_loss + ret_loss
+        act_loss = - sample.state[:, sample.action, 0] * (sample.cum_return - sample.state[:, sample.action, 1])
+        if sample.next_state is not None:
+            value_target = torch.max(sample.next_state.data) - sample.reward
+        else:
+            value_target = sample.cum_return
+        val_loss = F.mse_loss(sample.state[:, sample.action, 1], value_target).unsqueeze(-1)
+        return act_loss + val_loss
 
     def _forward(self, xs, mxs, agent):
         policy = self._policy[agent](xs)
