@@ -12,8 +12,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from PytorchRouting.UtilLayers import Sequential
-
 from PytorchRouting.CoreLayers import Initialization, Loss, Selection
 from PytorchRouting.DecisionLayers import PerTaskAssignment
 from PytorchRouting.DecisionLayers.Decision import Decision

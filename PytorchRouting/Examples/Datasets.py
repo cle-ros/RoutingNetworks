@@ -6,7 +6,6 @@ As this is mostly for demonstration purposes, the code is uncommented.
 @created: 6/14/18
 """
 import abc
-import gzip
 import random
 try:
     import cPickle as pickle

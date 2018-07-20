@@ -5,10 +5,7 @@ This file defines class BaseReward.
 @created: 6/8/18
 """
 import abc
-import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.autograd import Variable
 
 
 class BaseReward(nn.Module, metaclass=abc.ABCMeta):
