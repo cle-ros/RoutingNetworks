@@ -45,5 +45,5 @@ class TabularPolicyStorage(nn.Module, metaclass=abc.ABCMeta):
         )
 
     def forward(self, xs):
-        policies = self._approx
+        policies = torch.cat([self._approx] * xs.shape[0], dim=0)
         return policies
