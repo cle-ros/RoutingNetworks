@@ -17,10 +17,11 @@ class QLearning(Decision):
     @staticmethod
     def _loss(sample):
         if sample.next_state is not None:
-            target = torch.max(sample.next_state.data) - sample.reward
+            target = sample.next_state.max(dim=1)[0] - sample.reward
         else:
             target = sample.cum_return
-        return F.smooth_l1_loss(sample.state[0, sample.action], target).unsqueeze(0)
+        target = target.detach()
+        return F.smooth_l1_loss(sample.state[:, sample.action].squeeze(), target.squeeze()).unsqueeze(0)
 
     def _forward(self, xs, mxs, agent):
         batch_dim = xs.size()[0]

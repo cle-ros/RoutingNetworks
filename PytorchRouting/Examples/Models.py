@@ -46,6 +46,9 @@ class LinearWithRelu(nn.Linear):
 
 
 class RoutedAllFC(nn.Module):
+    """
+    This is a non-optimized example model which can be used as a starting point for MTL experiments.
+    """
     def __init__(self, decision_maker, in_channels, convnet_out_size, out_dim, num_modules, num_agents):
         nn.Module.__init__(self)
         self.convolutions = nn.Sequential(
@@ -56,6 +59,7 @@ class RoutedAllFC(nn.Module):
             nn.BatchNorm2d(32),
             Flatten()
         )
+        # self._loss_func = Loss(torch.nn.CrossEntropyLoss(), NegLossReward(), discounting=1.)
         self._loss_func = Loss(torch.nn.MSELoss(), CorrectClassifiedReward(), discounting=1.)
 
         self._initialization = Initialization()
@@ -63,18 +67,17 @@ class RoutedAllFC(nn.Module):
 
         self._decision_1 = decision_maker(
             num_modules, convnet_out_size, num_agents=num_agents, policy_storage_type='tabular',
-            additional_reward_func=CollaborationReward(reward_ratio=0.3, num_actions=num_modules))
+            additional_reward_func=CollaborationReward(reward_ratio=0.1, num_actions=num_modules))
         self._decision_2 = decision_maker(
             num_modules, convnet_out_size, num_agents=num_agents, policy_storage_type='tabular',
-            additional_reward_func=CollaborationReward(reward_ratio=0.3, num_actions=num_modules))
+            additional_reward_func=CollaborationReward(reward_ratio=0.1, num_actions=num_modules))
         self._decision_3 = decision_maker(
             num_modules, convnet_out_size, num_agents=num_agents, policy_storage_type='tabular',
-            additional_reward_func=CollaborationReward(reward_ratio=0.3, num_actions=num_modules))
+            additional_reward_func=CollaborationReward(reward_ratio=0.1, num_actions=num_modules))
 
-        self._selection_1 = Selection(*[LinearWithRelu(convnet_out_size, 48) for _ in range(num_modules)])
-        self._selection_2 = Selection(*[LinearWithRelu(48, 48) for _ in range(num_modules)])
-        self._selection_3 = Selection(*[nn.Linear(48, out_dim) for _ in range(num_modules)])
-        # self._selection_f = Selection(*[nn.Linear(48, out_dim) for _ in range(num_modules)])
+        self._selection_1 = Selection(*[LinearWithRelu(convnet_out_size, 64) for _ in range(num_modules)])
+        self._selection_2 = Selection(*[LinearWithRelu(64, 64) for _ in range(num_modules)])
+        self._selection_3 = Selection(*[nn.Linear(64, out_dim) for _ in range(num_modules)])
 
     def forward(self, x, tasks):
         y = self.convolutions(x)

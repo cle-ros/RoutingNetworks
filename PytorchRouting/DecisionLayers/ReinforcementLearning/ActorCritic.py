@@ -22,11 +22,13 @@ class ActorCritic(Decision):
 
     @staticmethod
     def _loss(sample):
-        act_loss = - sample.state[:, sample.action, 0] * (sample.cum_return - sample.state[:, sample.action, 1])
+        normalized_return = (sample.cum_return - sample.state[:, sample.action, 1]).detach()
+        act_loss = - sample.state[:, sample.action, 0] * normalized_return
         if sample.next_state is not None:
-            value_target = torch.max(sample.next_state.data) - sample.reward
+            value_target = torch.max(sample.next_state) - sample.reward
         else:
             value_target = sample.cum_return
+        value_target = value_target.detach()
         val_loss = F.mse_loss(sample.state[:, sample.action, 1], value_target).unsqueeze(-1)
         return act_loss + val_loss
 

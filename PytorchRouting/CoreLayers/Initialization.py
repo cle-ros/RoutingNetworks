@@ -19,7 +19,7 @@ class Initialization(nn.Module):
         nn.Module.__init__(self)
 
     def forward(self, xs, tasks=()):
-        if tasks:
+        if len(tasks) > 0:
             mxs = [SampleMetaInformation(task=t) for t in tasks]
         else:
             mxs = [SampleMetaInformation() for _ in xs]

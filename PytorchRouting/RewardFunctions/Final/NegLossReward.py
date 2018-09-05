@@ -4,6 +4,7 @@ This file defines class NegLossReward.
 @author: Clemens Rosenbaum :: cgbr@cs.umass.edu
 @created: 6/8/18
 """
+import torch
 from .BaseReward import BaseReward
 
 
@@ -16,4 +17,6 @@ class NegLossReward(BaseReward):
         BaseReward.__init__(self, *args, **kwargs)
 
     def forward(self, loss, yest, ytrue):
-        return -loss.data.squeeze()
+        with torch.no_grad():
+            reward = -loss.squeeze()
+        return reward

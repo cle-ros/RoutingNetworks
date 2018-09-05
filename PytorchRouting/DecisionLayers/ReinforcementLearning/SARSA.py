@@ -16,7 +16,8 @@ class SARSA(QLearning):
     @staticmethod
     def _loss(sample):
         if sample.next_action is not None:
-            target = sample.next_state.data[sample.next_action] - sample.reward
+            target = sample.next_state.data[:, sample.next_action] - sample.reward
         else:
             target = sample.cum_return
-        return F.smooth_l1_loss(sample.state[0, sample.action], target).unsqueeze(0)
+        target = target.detach()
+        return F.smooth_l1_loss(sample.state[:, sample.action].squeeze(), target.squeeze()).unsqueeze(0)

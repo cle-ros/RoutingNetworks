@@ -55,7 +55,7 @@ class Loss(nn.Module, metaclass=abc.ABCMeta):
         return rl_tuples
 
     def forward(self, ysest, ystrue, mys):
-        module_loss = self._loss_func(ysest, ystrue.squeeze()).sum(dim=1).unsqueeze(-1)
+        module_loss = self._loss_func(ysest, ystrue.squeeze()).view(len(mys), -1).sum(dim=1).unsqueeze(-1)
         for l, my, yest, ytrue in zip(module_loss.split(1, dim=0), mys, ysest.split(1, dim=0), ystrue.split(1, dim=0)):
             my.final_reward = self._reward_func(l, yest, ytrue)
         module_loss = torch.sum(module_loss)

@@ -26,7 +26,7 @@ class GumbelSoftmax(Decision):
 
     def _forward(self, xs, mxs, agent):
         logits = self._policy[agent](xs)
-        if not self.training:
+        if self.training:
             actions, multiples = self._gumbel_softmax.sample(logits)
         else:
             actions = logits.max(dim=1)[1]
@@ -51,7 +51,8 @@ class GumbelSoftmaxSampling(nn.Module):
         self._temperature *= self._temperature_decay
         # print('The new temperature param is: {}'.format(self._temperature))
 
-    def _sample_gumble(self, shape, eps=1e-20):
+    @staticmethod
+    def _sample_gumble(shape, eps=1e-20):
         U = torch.FloatTensor(*shape)
         U.uniform_(0, 1)
         logs = -torch.log(-torch.log(U + eps) + eps)
@@ -70,16 +71,18 @@ class GumbelSoftmaxSampling(nn.Module):
             _, y_hard_index = torch.max(y, len(y.size())-1)
             y_hard = y.clone().data.zero_()
             y_hard[0, y_hard_index.squeeze()] = 1.
-            y_no_grad = Variable(y.data)
-            y = Variable(y_hard) - y_no_grad + y
+            y_no_grad = y.detach()
+            y = y_hard - y_no_grad + y
         return y
 
     def sample(self, logits):
         y = self._gumbel_softmax_sample(logits)
-        _, y_hard_index = torch.max(y, len(y.size()) -1)
-        index = y_hard_index.data
-        y_no_grad = Variable(y.data)
-        multiplier = 1. + (y - y_no_grad).squeeze()[index]
+        _, y_hard_index = torch.max(y, dim=-1)
+        index = y_hard_index.detach().view(-1, 1)
+        y_fake_grad = y - y.detach()
+        # if len(y_fake_grad.shape) == 1:
+        #     y_fake_grad = y_fake_grad.view(1, -1)
+        multiplier = 1 + torch.gather(y_fake_grad, 1, index)
         return index, multiplier
 
     def __call__(self, *args, **kwargs):
