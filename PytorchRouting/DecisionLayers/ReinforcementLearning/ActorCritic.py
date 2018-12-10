@@ -15,10 +15,10 @@ class ActorCritic(Decision):
     """
     ActorCritic based decision making.
     """
-
-    def _construct_policy_storage(self, *args, **kwargs):
-        Decision._construct_policy_storage(self, *args, **kwargs)
-        self._value_mem = copy.deepcopy(self._policy)
+    def __init__(self, *args, **kwargs):
+        Decision.__init__(self, *args, **kwargs)
+        self._value_mem = self._construct_policy_storage(
+            self._num_selections, self._pol_type, None, self._pol_hidden_dims)
 
     @staticmethod
     def _loss(sample):

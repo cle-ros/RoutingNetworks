@@ -16,6 +16,13 @@ class CorrectClassifiedReward(BaseReward):
         BaseReward.__init__(self, *args, **kwargs)
 
     def forward(self, loss, yest, ytrue):
-        _, y_max = yest.max(dim=1)
-        _, yt_max = ytrue.max(dim=1)
-        return -1. + 2. * (y_max.squeeze() == yt_max.squeeze()).float()
+        # input checking - onehot vs indices
+        if yest.numel() == yest.size(0):
+            y_ind = yest
+        else:
+            _, y_ind = yest.max(dim=1)
+        if ytrue.numel() == ytrue.size(0):
+            yt_ind = ytrue
+        else:
+            _, yt_ind = ytrue.max(dim=1)
+        return -1. + 2. * (y_ind.squeeze() == yt_ind.squeeze()).float()

@@ -8,6 +8,8 @@ import abc
 import copy
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+
 from torch.distributions.distribution import Distribution
 
 from .PolicyStorage import ApproxPolicyStorage, TabularPolicyStorage
@@ -29,7 +31,8 @@ class Decision(nn.Module, metaclass=abc.ABCMeta):
             detach=True,
             approx_hidden_dims=(),
             approx_module=None,
-            additional_reward_func=PerActionBaseReward()
+            additional_reward_func=PerActionBaseReward(),
+            bellman_loss_func=F.smooth_l1_loss
         ):
         nn.Module.__init__(self)
         self._in_features = in_features
@@ -37,8 +40,15 @@ class Decision(nn.Module, metaclass=abc.ABCMeta):
         self._num_agents = num_agents
         self._exploration = exploration
         self._detach = detach
-        self._construct_policy_storage(policy_storage_type, approx_module, approx_hidden_dims)
+        self._pol_type = policy_storage_type
+        self._pol_hidden_dims = approx_hidden_dims
+        self._policy = self._construct_policy_storage(
+            self._num_selections, self._pol_type, approx_module, self._pol_hidden_dims)
         self.additional_reward_func = additional_reward_func
+        self.bellman_loss_func = bellman_loss_func
+
+    def set_exploration(self, exploration):
+        self._exploration = exploration
 
     @abc.abstractmethod
     def _forward(self, xs, mxs, prior_action):
@@ -49,27 +59,28 @@ class Decision(nn.Module, metaclass=abc.ABCMeta):
     def _loss(sample):
         pass
 
-    def _construct_policy_storage(self, policy_storage_type, approx_module, approx_hidden_dims):
+    def _construct_policy_storage(self, out_dim, policy_storage_type, approx_module, approx_hidden_dims):
         if policy_storage_type in ('approx', 0):
             if approx_module:
-                self._policy = nn.ModuleList(
+                policy = nn.ModuleList(
                     [ApproxPolicyStorage(approx=copy.deepcopy(approx_module), detach=self._detach)
                      for _ in range(self._num_agents)]
                 )
             else:
-                self._policy = nn.ModuleList(
+                policy = nn.ModuleList(
                     [ApproxPolicyStorage(
                         in_features=self._in_features,
-                        num_selections=self._num_selections,
+                        num_selections=out_dim,
                         hidden_dims=approx_hidden_dims,
                         detach=self._detach)
                         for _ in range(self._num_agents)]
                 )
         else:
-            self._policy = nn.ModuleList(
-                [TabularPolicyStorage(num_selections=self._num_selections)
+            policy = nn.ModuleList(
+                [TabularPolicyStorage(num_selections=out_dim)
                 for _ in range(self._num_agents)]
             )
+        return policy
 
     def forward(self, xs, mxs, prior_actions=None):
         """

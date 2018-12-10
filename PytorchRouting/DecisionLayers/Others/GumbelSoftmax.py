@@ -4,6 +4,7 @@ This file defines class GumbelSoftmax.
 @author: Clemens Rosenbaum :: cgbr@cs.umass.edu
 @created: 6/12/18
 """
+import math
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
@@ -18,7 +19,13 @@ class GumbelSoftmax(Decision):
     """
     def __init__(self, *args, **kwargs):
         Decision.__init__(self, *args, **kwargs)
-        self._gumbel_softmax = GumbelSoftmaxSampling()
+        # translating exploration into the sampling temperature parameter in [0.1, 10]
+        self._gumbel_softmax = GumbelSoftmaxSampling(temperature_init=1)
+        self.set_exploration(self._exploration)
+
+    def set_exploration(self, exploration):
+        temperature = 0.1 + 9.9*exploration
+        self._gumbel_softmax.set_temperature(temperature)
 
     @staticmethod
     def _loss(sample):
@@ -31,7 +38,8 @@ class GumbelSoftmax(Decision):
         else:
             actions = logits.max(dim=1)[1]
             multiples = 1.
-        return xs*multiples, actions, logits
+        ys = (xs.view(xs.size(0), -1) * multiples).contiguous().view(xs.shape)  # shape casting to allow for mask-multiply
+        return ys, actions, logits
 
 
 class GumbelSoftmaxSampling(nn.Module):
@@ -39,16 +47,15 @@ class GumbelSoftmaxSampling(nn.Module):
     This class defines the core functionality to sample from a gumbel softmax distribution
     """
 
-    def __init__(self, temperature_init=30, temperature_decay=0.9, hard=True, hook=None):
+    def __init__(self, temperature_init=1., hard=True, hook=None):
         nn.Module.__init__(self)
         self._temperature = temperature_init
-        self._temperature_decay = temperature_decay
         self.softmax = nn.Softmax(dim=1)
         self._hard = hard
         self._hook = hook
 
-    def reduce_temperature(self):
-        self._temperature *= self._temperature_decay
+    def set_temperature(self, temperature):
+        self._temperature = temperature
         # print('The new temperature param is: {}'.format(self._temperature))
 
     @staticmethod

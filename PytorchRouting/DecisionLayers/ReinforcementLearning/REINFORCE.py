@@ -15,7 +15,7 @@ class REINFORCE(Decision):
     """
     @staticmethod
     def _loss(sample):
-        return - sample.state.log_prob(sample.action) * sample.cum_return
+        return - sample.state[:, sample.action] * sample.cum_return.detach()
 
     def _forward(self, xs, mxs, agent):
         policy = self._policy[agent](xs)

@@ -1,5 +1,5 @@
 # Pytorch-Routing
-Pytorch-Routing is a pytorch-based implementation of 'RoutingNetworks' for Python 3.5+ (it should not be backwards compatible):
+Pytorch-Routing is a pytorch-based implementation of 'RoutingNetworks' for Python 3.5+:
 
 Clemens Rosenbaum, Tim Klinger, Matthew Riemer - _Routing Networks: Adaptive Selection of Non-Linear Functions for Multi-Task Learning_ (ICLR 2018).
 

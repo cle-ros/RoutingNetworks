@@ -29,7 +29,7 @@ class ApproxPolicyStorage(nn.Module, metaclass=abc.ABCMeta):
 
     def forward(self, xs):
         if self._detach:
-            xs = Variable(xs.data)
+            xs = xs.detach()
         policies = self._approx(xs)
         return policies
 

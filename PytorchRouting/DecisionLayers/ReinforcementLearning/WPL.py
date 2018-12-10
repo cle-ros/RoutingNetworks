@@ -14,21 +14,19 @@ from ..Decision import Decision
 class WPL(Decision):
     """
     Weighted Policy Learner (WPL) Multi-Agent Reinforcement Learning based decision making.
-    To make it back-propagatable, this version has some slight variations over the original algorithm.
     """
+    def __init__(self, *args, **kwargs):
+        Decision.__init__(self, *args, **kwargs)
+        self._value_mem = self._construct_policy_storage(
+            self._num_selections, self._pol_type, None, self._pol_hidden_dims)
 
-    def _construct_policy_storage(self, *args, **kwargs):
-        Decision._construct_policy_storage(self, *args, **kwargs)
-        self._value_mem = copy.deepcopy(self._policy)
-
-    @staticmethod
-    def _loss(sample):
+    def _loss(self, sample):
         grad_est = sample.cum_return - sample.state[:, sample.action, 1]
         grad_projected = torch.where(grad_est < 0, 1. + grad_est, 2. - grad_est)
         prob_taken = sample.state[:, sample.action, 0]
         prob_target = (prob_taken * grad_projected).detach()
-        act_loss = F.smooth_l1_loss(prob_taken, prob_target)
-        ret_loss = F.mse_loss(sample.state[:, sample.action, 1], sample.cum_return.detach()).unsqueeze(-1)
+        act_loss = self.bellman_loss_func(prob_taken, prob_target)
+        ret_loss = self.bellman_loss_func(sample.state[:, sample.action, 1], sample.cum_return.detach()).unsqueeze(-1)
         return act_loss + ret_loss
 
     def _forward(self, xs, mxs, agent):
@@ -44,3 +42,36 @@ class WPL(Decision):
             actions = distribution.logits.max(dim=1)[1]
         state = torch.stack([distribution.logits, values], 2)
         return xs, actions, state
+
+    # @staticmethod
+    # def _loss(sample):
+    #     grad_est = sample.cum_return - sample.state[:, 0, 1]
+    #     # ret_loss = F.smooth_l1_loss(sample.state[:, sample.action, 1], sample.cum_return).unsqueeze(-1)
+    #     ret_loss = F.smooth_l1_loss(sample.state[:, 0, 1], sample.cum_return).unsqueeze(-1)
+    #     grad_projected = grad_est * 1.3
+    #     grad_projected = torch.pow(grad_projected, 3.)
+    #     if grad_projected < 0:
+    #         pol_update = 1. + grad_projected
+    #     else:
+    #         pol_update = 2. - grad_projected
+    #     pol_update = sample.state[:, sample.action, 0] * pol_update
+    #     act_loss = F.smooth_l1_loss(sample.state[:, sample.action, 0], pol_update.data)
+    #     return act_loss + ret_loss
+
+    # # @staticmethod
+    # def _loss(self, sample):
+    #     grad_est = sample.cum_return - sample.state[:, 0, 1]
+    #     # ret_loss = F.smooth_l1_loss(sample.state[:, sample.action, 1], sample.cum_return).unsqueeze(-1)
+    #     # ret_loss = F.smooth_l1_loss(sample.state[:, 0, 1], sample.cum_return).unsqueeze(-1)
+    #     grad_projected = grad_est * 1.3
+    #     grad_projected = torch.pow(grad_projected, 3.)
+    #     if grad_projected < 0:
+    #         pol_update = 1. + grad_projected
+    #     else:
+    #         pol_update = 2. - grad_projected
+    #     pol_update = sample.state[:, sample.action, 0] * pol_update
+    #     self._policy[sample.prior_action]._approx.data[0, sample.action] = pol_update.data
+    #     self._value_mem[sample.prior_action]._approx.data[0, sample.action] = \
+    #         0.9 * self._value_mem[sample.prior_action]._approx.data[0, sample.action] + 0.1 * sample.cum_return
+    #     # act_loss = F.smooth_l1_loss(sample.state[:, sample.action, 0], pol_update.data)
+    #     return torch.zeros(1).to(sample.action.device)

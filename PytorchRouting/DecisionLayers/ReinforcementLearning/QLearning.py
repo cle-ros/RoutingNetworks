@@ -14,14 +14,13 @@ class QLearning(Decision):
     """
     QLearning (state-action value function) based decision making.
     """
-    @staticmethod
-    def _loss(sample):
+    def _loss(self, sample):
         if sample.next_state is not None:
             target = sample.next_state.max(dim=1)[0] - sample.reward
         else:
-            target = sample.cum_return
+            target = sample.reward
         target = target.detach()
-        return F.smooth_l1_loss(sample.state[:, sample.action].squeeze(), target.squeeze()).unsqueeze(0)
+        return self.bellman_loss_func(sample.state[:, sample.action].squeeze(), target.squeeze()).unsqueeze(0)
 
     def _forward(self, xs, mxs, agent):
         batch_dim = xs.size()[0]

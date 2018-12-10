@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='PytorchRouting',
-    version='0.2',
+    version='0.3',
     python_requires='>=3.5',
     packages=['PytorchRouting', 'PytorchRouting.Helpers', 'PytorchRouting.Examples', 'PytorchRouting.CoreLayers',
               'PytorchRouting.UtilLayers', 'PytorchRouting.DecisionLayers', 'PytorchRouting.DecisionLayers.Others',

@@ -13,11 +13,10 @@ class SARSA(QLearning):
     """
     SARSA on-policy q-function learning.
     """
-    @staticmethod
-    def _loss(sample):
+    def _loss(self, sample):
         if sample.next_action is not None:
             target = sample.next_state.data[:, sample.next_action] - sample.reward
         else:
             target = sample.cum_return
         target = target.detach()
-        return F.smooth_l1_loss(sample.state[:, sample.action].squeeze(), target.squeeze()).unsqueeze(0)
+        return self.bellman_loss_func(sample.state[:, sample.action].squeeze(), target.squeeze()).unsqueeze(0)

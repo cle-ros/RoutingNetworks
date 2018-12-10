@@ -13,6 +13,7 @@ class SampleMetaInformation(object):
 
     def __init__(self, task=None):
         self.task = task
+        self.add_rewards = []
 
     def append(self, attr_name, obj):
         try:

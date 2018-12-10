@@ -19,12 +19,14 @@ class RLSample(object):
             action,
             reward,
             cum_return,
+            prior_action,
             next_state,
             next_action
         ):
         self.loss_function = loss_function
         self.state = state
         self.action = action
+        self.prior_action = prior_action
         self.reward = reward
         self.cum_return = cum_return
         self.next_state = next_state

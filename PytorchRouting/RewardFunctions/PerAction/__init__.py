@@ -1,1 +1,1 @@
-from .CollaborationReward import CollaborationReward
+from .CollaborationReward import CollaborationReward, RunningAverageCollaborationReward

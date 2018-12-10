@@ -14,7 +14,7 @@ class PerActionBaseReward(object, metaclass=abc.ABCMeta):
     Class BaseReward defines the base class for per-action rewards.
     """
 
-    def __init__(self, history_window=256):
+    def __init__(self, history_window=256, *args, **kwargs):
         self._hist_len = history_window
         self._dists = deque(maxlen=history_window)
         self._actions = deque(maxlen=history_window)

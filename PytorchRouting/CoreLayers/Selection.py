@@ -35,6 +35,9 @@ class Selection(nn.Module):
         :param kwargs:
         :return:
         """
+        # in case there is no selection to be made, just skip all this computation
+        if len(self._submodules) == 1:
+            return self._submodules[0](xs), mxs, actions
         ys = []
         xs = xs.split(split_size=1, dim=0)
         assert len(xs) == len(mxs)
