@@ -7,6 +7,11 @@ https://openreview.net/forum?id=ry8dvM-R-
 
 Multi-task learning (MTL) with neural networks leverages commonalities in tasks to improve performance, but often suffers from task interference which reduces the benefits of transfer. To address this issue we introduce the routing network paradigm, a novel neural network and training algorithm. A routing network is a kind of self-organizing neural network consisting of two components: a router and a set of one or more function blocks. A function block may be any neural network – for example a fully-connected or a convolutional layer. Given an input the router makes a routing decision, choosing a function block to apply and passing the output back to the router recursively, terminating when a fixed recursion depth is reached. In this way the routing network dynamically composes different function blocks for each input. We employ a collaborative multi-agent reinforcement learning (MARL) approach to jointly train the router and function blocks. We evaluate our model against cross-stitch networks and shared-layer baselines on multi-task settings of the MNIST, mini-imagenet, and CIFAR-100 datasets. Our experiments demonstrate a significant improvement in accuracy, with sharper convergence. In addition, routing networks have nearly constant per-task training cost while cross-stitch networks scale linearly with the number of tasks. On CIFAR100 (20 tasks) we obtain cross-stitch performance levels with an 85% average reduction in training time.
 
+### What's new
+I added implementations of several different new decision making algorithms. In particular, I added reparameterization techniques such as Gumbel/Concrete and RELAX. Additionally, I added some Advantage based RL techniques.
+
+I also added a new module called "prefabs" that includes already defined more or less standard routed layers. For now, it only contains an RNN prefab in form of a routed LSTM. Routing for both i2h and h2h layers can be specified at initialization. 
+
 ## Implementation
 This package provides an implementation of RoutingNetworks that tries to integrate with Pytorch (https://pytorch.org/) as smoothly as possible by providing RoutingNetwork "layers", each implemented as a `nn.Module`.
 

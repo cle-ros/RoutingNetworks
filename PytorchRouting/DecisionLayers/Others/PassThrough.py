@@ -1,23 +1,18 @@
 """
-This file defines class PerTaskAssignment.
+This file defines the pass through decision maker.
 
 @author: Clemens Rosenbaum :: cgbr@cs.umass.edu
-@created: 6/12/18
-"""
-"""
-This file defines class REINFORCE.
-
-@author: Clemens Rosenbaum :: cgbr@cs.umass.edu
-@created: 6/7/18
+@created: 2/7/19
 """
 import torch
 
 from ..Decision import Decision
 
 
-class PerTaskAssignment(Decision):
+class PassThrough(Decision):
     """
-    This simple class translates task assignments stored in the meta-information objects to actions.
+    This helper decision module does not actually make any decision, but is only a dummy useful for some
+    implementations.
     """
     def __init__(self, *args, **kwargs):
         Decision.__init__(self, None, None, )
@@ -32,5 +27,4 @@ class PerTaskAssignment(Decision):
     def _forward(self, xs, prior_action): pass
 
     def forward(self, xs, mxs, _=None, __=None):
-        actions = torch.LongTensor([m.task for m in mxs]).to(xs.device)
-        return xs, mxs, actions
+        return xs, mxs, torch.zeros(len(mxs), dtype=torch.long, device=xs.device)

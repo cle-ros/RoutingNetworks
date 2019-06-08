@@ -28,18 +28,19 @@ class GumbelSoftmax(Decision):
         self._gumbel_softmax.set_temperature(temperature)
 
     @staticmethod
-    def _loss(sample):
-        return torch.zeros(1).to(sample.state.device)
+    def _loss(self, is_terminal, state, next_state, action, next_action, reward, final_reward):
+        return torch.zeros_like(action, dtype=torch.float, device=action.device)
 
-    def _forward(self, xs, mxs, agent):
+    def _forward(self, xs, agent):
         logits = self._policy[agent](xs)
         if self.training:
             actions, multiples = self._gumbel_softmax.sample(logits)
         else:
             actions = logits.max(dim=1)[1]
             multiples = 1.
-        ys = (xs.view(xs.size(0), -1) * multiples).contiguous().view(xs.shape)  # shape casting to allow for mask-multiply
-        return ys, actions, logits
+        # shape casting to allow for mask-multiply
+        ys = (xs.contiguous().view(xs.size(0), -1) * multiples).contiguous().view(xs.shape)
+        return ys, actions, self._eval_stochastic_are_exp(actions, logits), logits
 
 
 class GumbelSoftmaxSampling(nn.Module):

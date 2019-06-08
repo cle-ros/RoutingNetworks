@@ -26,7 +26,7 @@ class CollaborationReward(PerActionBaseReward):
         action_count = torch.sum(action_count, dim=0)/len(self._actions)
         self._precomp = action_count
         self._precomp = self._reward_ratio * self._precomp
-        return self._precomp[action]
+        return self._precomp[action] * self._reward_ratio
 
 
 class RunningAverageCollaborationReward(PerActionBaseReward):
@@ -61,4 +61,4 @@ class RunningAverageCollaborationReward(PerActionBaseReward):
         self._precomp = None
 
     def get_reward(self, dist, action):
-        return self._actions[action]
+        return self._actions[action] * self._reward_ratio

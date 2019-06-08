@@ -12,6 +12,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from PytorchRouting.UtilLayers import Sequential
+
 from PytorchRouting.CoreLayers import Initialization, Loss, Selection
 from PytorchRouting.DecisionLayers import PerTaskAssignment
 from PytorchRouting.DecisionLayers.Decision import Decision
@@ -45,12 +47,10 @@ class LinearWithRelu(nn.Linear):
         return output
 
 
-class RoutedAllFC(nn.Module):
-    """
-    This is a non-optimized example model which can be used as a starting point for MTL experiments.
-    """
-    def __init__(self, decision_maker, in_channels, convnet_out_size, out_dim, num_modules, num_agents):
+class PerTask_all_fc(nn.Module):
+    def __init__(self, in_channels, convnet_out_size, out_dim, num_modules, num_agents,):
         nn.Module.__init__(self)
+        print('Per task exclusive: all fc')
         self.convolutions = nn.Sequential(
             SimpleConvNetBlock(in_channels, 32, 3),
             SimpleConvNetBlock(32, 32, 3),
@@ -59,25 +59,84 @@ class RoutedAllFC(nn.Module):
             nn.BatchNorm2d(32),
             Flatten()
         )
-        # self._loss_func = Loss(torch.nn.CrossEntropyLoss(), NegLossReward(), discounting=1.)
-        self._loss_func = Loss(torch.nn.MSELoss(), CorrectClassifiedReward(), discounting=1.)
+        # self._loss_layer = Loss(torch.nn.MSELoss(), CorrectClassifiedReward(), discounting=1.)
+        self._loss_layer = Loss(torch.nn.MSELoss(), NegLossReward(), discounting=1.)
+        self.fc_layers = Sequential(
+            PerTaskAssignment(),
+            Selection(*[LinearWithRelu(convnet_out_size, 48) for _ in range(num_modules)]),
+            Selection(*[LinearWithRelu(48, 48) for _ in range(num_modules)]),
+            Selection(*[nn.Linear(48, out_dim) for _ in range(num_modules)]),
+        )
 
+    def forward(self, x, tasks):
+        y = self.convolutions(x)
+        y, meta = self.fc_layers(y, tasks=tasks)
+        return y, meta
+
+    def loss(self, yhat, ytrue, ym):
+        return self._loss_layer(yhat, ytrue, ym)
+
+    def start_logging_selections(self):
+        for m in self.modules():
+            if isinstance(m, Selection):
+                m.start_logging_selections()
+
+    def stop_logging_selections_and_report(self):
+        modules_used = ''
+        for m in self.modules():
+            if isinstance(m, Selection):
+                selections = m.stop_logging_and_get_selections()
+                if len(selections) > 0:
+                    modules_used += '{}, '.format(len(selections))
+        print('        Modules used: {}'.format(modules_used))
+
+
+class PerTask_1_fc(PerTask_all_fc):
+    def __init__(self, in_channels, convnet_out_size, out_dim, num_modules, num_agents,):
+        PerTask_all_fc.__init__(self, in_channels, convnet_out_size, out_dim, num_modules, num_agents,)
+        print('Per task exclusive: last fc')
+        self.convolutions = nn.Sequential(
+            self.convolutions,
+            Flatten(),
+            LinearWithRelu(convnet_out_size, 48),
+            LinearWithRelu(48, 48)
+        )
+        self._loss_layer = Loss(torch.nn.MSELoss(), CorrectClassifiedReward(), discounting=1.)
+        self.fc_layers = Sequential(
+            PerTaskAssignment(),
+            Selection(*[nn.Linear(48, out_dim) for _ in range(num_modules)]),
+        )
+
+    def forward(self, x, tasks):
+        y = self.convolutions(x)
+        y, meta = self.fc_layers(y, tasks=tasks)
+        return y, meta
+
+
+class RoutedAllFC(PerTask_all_fc):
+    def __init__(self, decision_maker, in_channels, convnet_out_size, out_dim, num_modules, num_agents):
+        PerTask_all_fc.__init__(self, in_channels, convnet_out_size, out_dim, num_modules, num_agents)
+        print('Routing Networks:   all fc')
         self._initialization = Initialization()
-        self._per_task_assignment = PerTaskAssignment()
+        # self._per_task_assignment = PerTaskAssignment()
+        self._per_task_assignment = decision_maker(
+            num_agents, convnet_out_size, num_agents=1, policy_storage_type='approx',
+            additional_reward_func=CollaborationReward(reward_ratio=0.3, num_actions=num_modules))
 
         self._decision_1 = decision_maker(
-            num_modules, convnet_out_size, num_agents=num_agents, policy_storage_type='tabular',
-            additional_reward_func=CollaborationReward(reward_ratio=0.1, num_actions=num_modules))
+            num_modules, convnet_out_size, num_agents=num_agents, policy_storage_type='approx',
+            additional_reward_func=CollaborationReward(reward_ratio=0.3, num_actions=num_modules))
         self._decision_2 = decision_maker(
-            num_modules, convnet_out_size, num_agents=num_agents, policy_storage_type='tabular',
-            additional_reward_func=CollaborationReward(reward_ratio=0.1, num_actions=num_modules))
+            num_modules, 48, num_agents=num_agents, policy_storage_type='approx',
+            additional_reward_func=CollaborationReward(reward_ratio=0.3, num_actions=num_modules))
         self._decision_3 = decision_maker(
-            num_modules, convnet_out_size, num_agents=num_agents, policy_storage_type='tabular',
-            additional_reward_func=CollaborationReward(reward_ratio=0.1, num_actions=num_modules))
+            num_modules, 48, num_agents=num_agents, policy_storage_type='approx',
+            additional_reward_func=CollaborationReward(reward_ratio=0.3, num_actions=num_modules))
 
-        self._selection_1 = Selection(*[LinearWithRelu(convnet_out_size, 64) for _ in range(num_modules)])
-        self._selection_2 = Selection(*[LinearWithRelu(64, 64) for _ in range(num_modules)])
-        self._selection_3 = Selection(*[nn.Linear(64, out_dim) for _ in range(num_modules)])
+        self._selection_1 = Selection(*[LinearWithRelu(convnet_out_size, 48) for _ in range(num_modules)])
+        self._selection_2 = Selection(*[LinearWithRelu(48, 48) for _ in range(num_modules)])
+        self._selection_3 = Selection(*[nn.Linear(48, out_dim) for _ in range(num_modules)])
+        # self._selection_f = Selection(*[nn.Linear(48, out_dim) for _ in range(num_modules)])
 
     def forward(self, x, tasks):
         y = self.convolutions(x)
@@ -89,6 +148,8 @@ class RoutedAllFC(nn.Module):
         y, meta, _ = self._selection_2(y, meta, routing_actions_2)
         y, meta, routing_actions_3 = self._decision_3(y, meta, task_actions)
         y, meta, _ = self._selection_3(y, meta, routing_actions_3)
+        # y, meta, _ = self._selection_3(y, meta, task_actions)
+        # y, meta, _ = self._selection_f(y, meta, routing_actions_3)
         return y, meta
 
     def _get_params_by_class(self, cls):
@@ -107,30 +168,3 @@ class RoutedAllFC(nn.Module):
         params = self._get_params_by_class(Selection)
         params += list(self.convolutions.parameters())
         return params
-
-    def loss(self, yhat, ytrue, ym):
-        return self._loss_func(yhat, ytrue, ym)
-
-    def start_logging_selections(self):
-        for m in self.modules():
-            if isinstance(m, Selection):
-                m.start_logging_selections()
-
-    def stop_logging_selections_and_report(self):
-        modules_used = ''
-        for m in self.modules():
-            if isinstance(m, Selection):
-                selections = m.stop_logging_and_get_selections()
-                if len(selections) > 0:
-                    modules_used += '{}, '.format(len(selections))
-        print('        Modules used: {}'.format(modules_used))
-
-
-class DispatchedRoutedAllFC(RoutedAllFC):
-    def __init__(self, dispatcher_decision_maker, decision_maker, in_channels, convnet_out_size,
-                 out_dim, num_modules, num_agents):
-        RoutedAllFC.__init__(self, decision_maker, in_channels, convnet_out_size, out_dim, num_modules, num_agents)
-        self._per_task_assignment = dispatcher_decision_maker(
-            num_agents, convnet_out_size, num_agents=1, policy_storage_type='approx',
-            additional_reward_func=CollaborationReward(reward_ratio=0.0, num_actions=num_modules))
-

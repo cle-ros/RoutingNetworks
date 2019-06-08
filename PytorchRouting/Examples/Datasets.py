@@ -23,21 +23,24 @@ class Dataset(object, metaclass=abc.ABCMeta):
     Class Datasets defines ...
     """
 
-    def __init__(self, batch_size, data_files=()):
+    def __init__(self, batch_size, data_files=(), cuda=False):
         self._iterator = None
         self._batch_size = batch_size
         self._data_files = data_files
         self._train_set, self._test_set = self._get_datasets()
+        self._cuda = cuda
 
     @abc.abstractmethod
     def _get_datasets(self): return [], []
 
-    @staticmethod
-    def _batched_iter(dataset, batch_size):
+    def _batched_iter(self, dataset, batch_size):
         for i in range(0, len(dataset), batch_size):
             batch = dataset[i:i+batch_size]
-            samples = Variable(torch.stack([torch.FloatTensor(sample[0]) for sample in batch], 0)).cuda()
-            targets = Variable(torch.stack([torch.LongTensor([sample[1]]) for sample in batch], 0)).cuda()
+            samples = Variable(torch.stack([torch.FloatTensor(sample[0]) for sample in batch], 0))
+            targets = Variable(torch.stack([torch.LongTensor([sample[1]]) for sample in batch], 0))
+            if self._cuda:
+                samples = samples.cuda()
+                targets = targets.cuda()
             tasks = [sample[2] for sample in batch]
             yield samples, targets, tasks
 

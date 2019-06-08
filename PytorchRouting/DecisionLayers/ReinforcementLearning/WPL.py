@@ -8,40 +8,37 @@ import copy
 import torch
 import torch.nn.functional as F
 
-from ..Decision import Decision
+from .ActorCritic import ActorCritic
 
 
-class WPL(Decision):
+class WPL(ActorCritic):
     """
     Weighted Policy Learner (WPL) Multi-Agent Reinforcement Learning based decision making.
     """
-    def __init__(self, *args, **kwargs):
-        Decision.__init__(self, *args, **kwargs)
-        self._value_mem = self._construct_policy_storage(
-            self._num_selections, self._pol_type, None, self._pol_hidden_dims)
 
-    def _loss(self, sample):
-        grad_est = sample.cum_return - sample.state[:, sample.action, 1]
+    def _loss(self, is_terminal, state, next_state, action, next_action, reward, cum_return, final_reward):
+        grad_est = cum_return - state[:, :, 1].gather(index=action.unsqueeze(1), dim=1).view(-1)
         grad_projected = torch.where(grad_est < 0, 1. + grad_est, 2. - grad_est)
-        prob_taken = sample.state[:, sample.action, 0]
+        prob_taken = state[:, :, 0].gather(index=action.unsqueeze(1), dim=1).view(-1)
         prob_target = (prob_taken * grad_projected).detach()
-        act_loss = self.bellman_loss_func(prob_taken, prob_target)
-        ret_loss = self.bellman_loss_func(sample.state[:, sample.action, 1], sample.cum_return.detach()).unsqueeze(-1)
+        act_loss = F.mse_loss(prob_taken, prob_target, reduction='none')
+        ret_loss = F.mse_loss(state[:, :, 1].gather(index=action.unsqueeze(1), dim=1).view(-1),
+                              cum_return.detach(), reduction='none').view(-1)
         return act_loss + ret_loss
 
-    def _forward(self, xs, mxs, agent):
+    def _forward(self, xs, agent):
         policy = self._policy[agent](xs)
         # policy = F.relu(policy) - F.relu(policy - 1.) + 1e-6
-        policy = policy - policy.min(dim=1)[0] + 1e-6
+        policy = (policy.transpose(0, 1) - policy.min(dim=1)[0]).transpose(0, 1) + 1e-6
         # policy = policy/policy.sum(dim=1)
-        values = self._value_mem[agent](xs)
+        values = self._qvalue_mem[agent](xs)
         distribution = torch.distributions.Categorical(probs=policy)
         if self.training:
             actions = distribution.sample()
         else:
             actions = distribution.logits.max(dim=1)[1]
         state = torch.stack([distribution.logits, values], 2)
-        return xs, actions, state
+        return xs, actions, self._eval_stochastic_are_exp(actions, state), state
 
     # @staticmethod
     # def _loss(sample):
@@ -71,7 +68,7 @@ class WPL(Decision):
     #         pol_update = 2. - grad_projected
     #     pol_update = sample.state[:, sample.action, 0] * pol_update
     #     self._policy[sample.prior_action]._approx.data[0, sample.action] = pol_update.data
-    #     self._value_mem[sample.prior_action]._approx.data[0, sample.action] = \
-    #         0.9 * self._value_mem[sample.prior_action]._approx.data[0, sample.action] + 0.1 * sample.cum_return
+    #     self._qvalue_mem[sample.prior_action]._approx.data[0, sample.action] = \
+    #         0.9 * self._qvalue_mem[sample.prior_action]._approx.data[0, sample.action] + 0.1 * sample.cum_return
     #     # act_loss = F.smooth_l1_loss(sample.state[:, sample.action, 0], pol_update.data)
     #     return torch.zeros(1).to(sample.action.device)
