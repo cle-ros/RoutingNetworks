@@ -118,19 +118,16 @@ class RoutedAllFC(PerTask_all_fc):
         PerTask_all_fc.__init__(self, in_channels, convnet_out_size, out_dim, num_modules, num_agents)
         print('Routing Networks:   all fc')
         self._initialization = Initialization()
-        # self._per_task_assignment = PerTaskAssignment()
-        self._per_task_assignment = decision_maker(
-            num_agents, convnet_out_size, num_agents=1, policy_storage_type='approx',
-            additional_reward_func=CollaborationReward(reward_ratio=0.3, num_actions=num_modules))
+        self._per_task_assignment = PerTaskAssignment()
 
         self._decision_1 = decision_maker(
-            num_modules, convnet_out_size, num_agents=num_agents, policy_storage_type='approx',
+            num_modules, convnet_out_size, num_agents=num_agents, policy_storage_type='tabular',
             additional_reward_func=CollaborationReward(reward_ratio=0.3, num_actions=num_modules))
         self._decision_2 = decision_maker(
-            num_modules, 48, num_agents=num_agents, policy_storage_type='approx',
+            num_modules, 48, num_agents=num_agents, policy_storage_type='tabular',
             additional_reward_func=CollaborationReward(reward_ratio=0.3, num_actions=num_modules))
         self._decision_3 = decision_maker(
-            num_modules, 48, num_agents=num_agents, policy_storage_type='approx',
+            num_modules, 48, num_agents=num_agents, policy_storage_type='tabular',
             additional_reward_func=CollaborationReward(reward_ratio=0.3, num_actions=num_modules))
 
         self._selection_1 = Selection(*[LinearWithRelu(convnet_out_size, 48) for _ in range(num_modules)])
@@ -168,3 +165,41 @@ class RoutedAllFC(PerTask_all_fc):
         params = self._get_params_by_class(Selection)
         params += list(self.convolutions.parameters())
         return params
+
+
+class Dispatched(RoutedAllFC):
+    def __init__(self, decision_maker, in_channels, convnet_out_size, out_dim, num_modules, num_agents):
+        RoutedAllFC.__init__(self, decision_maker, in_channels, convnet_out_size, out_dim, num_modules, num_agents)
+        self._per_task_assignment = decision_maker(
+            num_agents, convnet_out_size, num_agents=1, policy_storage_type='tabular',
+            additional_reward_func=CollaborationReward(reward_ratio=0.3, num_actions=num_modules))
+
+
+class PerDecisionSingleAgent(RoutedAllFC):
+    def __init__(self, decision_maker, in_channels, convnet_out_size, out_dim, num_modules, num_agents):
+        RoutedAllFC.__init__(self, decision_maker, in_channels, convnet_out_size, out_dim, num_modules, num_agents)
+        print('Routing Networks:   all fc')
+        self._initialization = Initialization()
+
+        self._decision_1 = decision_maker(
+            num_modules, convnet_out_size, num_agents=1, policy_storage_type='approx',
+            additional_reward_func=CollaborationReward(reward_ratio=0.3, num_actions=num_modules))
+        self._decision_2 = decision_maker(
+            num_modules, 48, num_agents=1, policy_storage_type='approx',
+            additional_reward_func=CollaborationReward(reward_ratio=0.3, num_actions=num_modules))
+        self._decision_3 = decision_maker(
+            num_modules, 48, num_agents=1, policy_storage_type='approx',
+            additional_reward_func=CollaborationReward(reward_ratio=0.3, num_actions=num_modules))
+
+    def forward(self, x, tasks):
+        y = self.convolutions(x)
+        y, meta, actions = self._initialization(y, tasks=tasks)
+        y, meta, routing_actions_1 = self._decision_1(y, meta, None)
+        y, meta, _ = self._selection_1(y, meta, routing_actions_1)
+        y, meta, routing_actions_2 = self._decision_2(y, meta, None)
+        y, meta, _ = self._selection_2(y, meta, routing_actions_2)
+        y, meta, routing_actions_3 = self._decision_3(y, meta, None)
+        y, meta, _ = self._selection_3(y, meta, routing_actions_3)
+        # y, meta, _ = self._selection_3(y, meta, task_actions)
+        # y, meta, _ = self._selection_f(y, meta, routing_actions_3)
+        return y, meta

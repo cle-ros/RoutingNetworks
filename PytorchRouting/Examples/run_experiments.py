@@ -6,7 +6,8 @@ import tqdm
 import torch
 from PytorchRouting.DecisionLayers import REINFORCE, QLearning, SARSA, ActorCritic, GumbelSoftmax, PerTaskAssignment, \
     WPL, AAC, AdvantageLearning, RELAX, EGreedyREINFORCE, EGreedyAAC
-from PytorchRouting.Examples.Models import PerTask_all_fc, RoutedAllFC, PerTask_1_fc
+from PytorchRouting.Examples.Models import PerTask_all_fc, RoutedAllFC, PerTask_1_fc, PerDecisionSingleAgent, \
+    Dispatched
 from PytorchRouting.Examples.Datasets import CIFAR100MTL
 
 
@@ -26,16 +27,17 @@ def one_hot(indices, width):
     return oh
 
 
-def run_experiment(model, dataset, learning_rates):
+def run_experiment(model, dataset, learning_rates, routing_module_learning_rate_ratio):
     print('Loaded dataset and constructed model. Starting Training ...')
     for epoch in range(50):
         optimizers = []
         parameters = []
         if epoch in learning_rates:
             try:
-                routing_multiplier = 1.
-                optimizers.append(torch.optim.SGD(model.routing_parameters(), lr=routing_multiplier*learning_rates[epoch]))
-                optimizers.append(torch.optim.SGD(model.module_parameters(), lr=learning_rates[epoch]))
+                optimizers.append(torch.optim.SGD(model.routing_parameters(),
+                                                  lr=routing_module_learning_rate_ratio*learning_rates[epoch]))
+                optimizers.append(torch.optim.SGD(model.module_parameters(),
+                                                  lr=learning_rates[epoch]))
                 parameters = model.module_parameters() + model.module_parameters()
             except AttributeError:
                 optimizers.append(torch.optim.SGD(model.parameters(), lr=learning_rates[epoch]))
@@ -85,20 +87,23 @@ if __name__ == '__main__':
     # dataset = MNIST_MTL(64, data_files=['./Datasets/mnist.pkl.gz'])
     # model = PerTask_all_fc(1, 288, 2, dataset.num_tasks, dataset.num_tasks)
     # model = WPL_routed_all_fc(1, 288, 2, dataset.num_tasks, dataset.num_tasks)
-    # cuda = False
-    cuda = True
+    cuda = False
+    # cuda = True
 
     # CIFAR
     dataset = CIFAR100MTL(10, data_files=['./Datasets/cifar-100-py/train', './Datasets/cifar-100-py/test'], cuda=cuda)
-    # model = RoutedAllFC(WPL, 3, 128, 5, dataset.num_tasks, dataset.num_tasks)
+    model = RoutedAllFC(WPL, 3, 128, 5, dataset.num_tasks, dataset.num_tasks)
     # model = RoutedAllFC(RELAX, 3, 128, 5, dataset.num_tasks, dataset.num_tasks)
     # model = RoutedAllFC(EGreedyREINFORCE, 3, 128, 5, dataset.num_tasks, dataset.num_tasks)
-    model = RoutedAllFC(AdvantageLearning, 3, 128, 5, dataset.num_tasks, dataset.num_tasks)
+    # model = RoutedAllFC(AdvantageLearning, 3, 128, 5, dataset.num_tasks, dataset.num_tasks)
+    # model = PerDecisionSingleAgent(AdvantageLearning, 3, 128, 5, dataset.num_tasks, dataset.num_tasks)
+    # model = Dispatched(AdvantageLearning, 3, 128, 5, dataset.num_tasks, dataset.num_tasks)
 
-    learning_rates = {0: 1e-2, 5: 1e-3, 10: 1e-4}
+    learning_rates = {0: 3e-3, 5: 1e-3, 10: 3e-4}
+    routing_module_learning_rate_ratio = 0.3
     if cuda:
         model.cuda()
-    run_experiment(model, dataset, learning_rates)
+    run_experiment(model, dataset, learning_rates, routing_module_learning_rate_ratio)
 
 '''
 WPL_routed_all_fc(3, 512, 5, dataset.num_tasks, dataset.num_tasks)
