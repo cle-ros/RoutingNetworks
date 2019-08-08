@@ -11,6 +11,18 @@ Clemens Rosenbaum, Tim Klinger, Matthew Riemer - _Routing Networks: Adaptive Sel
 
 https://openreview.net/forum?id=ry8dvM-R-
 
+An extension to language domains was introduced in NAACL:
+
+Ignacio Cases, Clemens Rosenbaum, Matthew Riemer, Atticus Geiger, Tim Klinger, Alex Tamkin, Olivia Li, Sandhini Agarwal, Joshua D. Greene, Dan Jurafsky, Christopher Potts and Lauri Karttunen "Recursive Routing Networks: Learning to Compose Modules for Language Understanding" (NAACL 2019).
+
+https://www.aclweb.org/anthology/N19-1365
+
+The latest research on "dispatched" routing networks for single task learning can be found here:
+
+Clemens Rosenbaum, Ignacio Cases, Matthew Riemer, Atticus Geiger, Lauri Karttunen, Joshua D. Greene, Dan Jurafsky, Christopher Potts "Dispatched Routing Networks" (Stanford Tech Report 2019).
+
+https://nlp.stanford.edu/projects/sci/dispatcher.pdf
+
 ### What's new
 I added implementations of several different new decision making algorithms. In particular, I added reparameterization techniques such as Gumbel/Concrete and RELAX. Additionally, I added some Advantage based RL techniques.
 
