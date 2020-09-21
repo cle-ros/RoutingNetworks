@@ -25,7 +25,7 @@ class Loss(nn.Module, metaclass=abc.ABCMeta):
         nn.Module.__init__(self)
         self._discounting = discounting
         self._loss_func = pytorch_loss_func
-        self._loss_func.reduce = False
+        self._loss_func.reduction = 'none'
         self._reward_func = routing_reward_func
 
     def _get_rl_tuple_list(self, mys):

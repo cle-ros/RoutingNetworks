@@ -26,7 +26,7 @@ class WPL(Decision):
         grad_projected = torch.where(grad_est < 0, 1. + grad_est, 2. - grad_est)
         prob_taken = sample.state[:, 0, sample.action]
         act_loss = F.smooth_l1_loss(prob_taken, (prob_taken * grad_projected).data)
-        ret_loss = F.smooth_l1_loss(sample.state[:, 1, sample.action], sample.cum_return).unsqueeze(-1)
+        ret_loss = F.smooth_l1_loss(sample.state[:, 1, sample.action], sample.cum_return.reshape(-1)).unsqueeze(-1)
         return act_loss + ret_loss
 
     def _forward(self, xs, mxs, agent):
